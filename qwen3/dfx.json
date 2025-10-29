@@ -1,0 +1,27 @@
+{
+  "canisters": {
+    "qwen3_backend": {
+      "candid": "src/qwen3_backend/qwen3_backend.did",
+      "package": "qwen3_backend",
+      "type": "rust"
+    },
+    "qwen3_frontend": {
+      "dependencies": [
+        "qwen3_backend"
+      ],
+      "source": [
+        "src/qwen3_frontend/dist"
+      ],
+      "type": "assets",
+      "workspace": "qwen3_frontend"
+    }
+  },
+  "defaults": {
+    "build": {
+      "args": "",
+      "packtool": ""
+    }
+  },
+  "output_env_file": ".env",
+  "version": 1
+}

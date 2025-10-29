@@ -7,7 +7,7 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [features]
-default = []
+default = ["simd-flash-attn"]
 simd-flash-attn = ["candle-nn/simd-flash-attn", "candle-transformers/simd-flash-attn"]
 
 [dependencies]

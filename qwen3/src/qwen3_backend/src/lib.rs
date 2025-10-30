@@ -8,6 +8,7 @@ use ic_stable_structures::{
 pub mod storage;
 pub mod candle;
 
+/*
 // Re-export Qwen3 types for Candid interface
 pub use candle::{
     GenerationConfig,
@@ -21,6 +22,7 @@ pub use candle::{
     is_model_loaded,
     get_model_info,
 };
+*/
 
 // Re-export storage functions for Candid
 pub use storage::{

@@ -1,5 +1,5 @@
 [package]
-name = "qwen3-backend"
+name = "qwen3_backend"
 version = "0.1.0"
 edition = "2021"
 
@@ -18,10 +18,13 @@ ic-stable-structures = "0.6"
 serde = { version = "1.0", features = ["derive"] }
 
 # Candle dependencies
-candle-core = { version = "0.6", default-features = false }
-candle-nn = { version = "0.6", default-features = false }
-candle-transformers = { version = "0.6", default-features = false, features = ["simd-flash-attn"] }
-tokenizers = { version = "0.15", default-features = false, features = ["unstable_wasm"] }
+candle-core = { git = "https://github.com/DrJesseGlass/candle", branch = "wasm/examples/qwen", default-features = false }
+candle-nn = { git = "https://github.com/DrJesseGlass/candle", branch = "wasm/examples/qwen", default-features = false }
+candle-transformers = { git = "https://github.com/DrJesseGlass/candle", branch = "wasm/examples/qwen", default-features = false, features = ["simd-flash-attn"] }
+tokenizers = { version = "0.22.1", default-features = false, features = ["unstable_wasm"] }
+
+# WASM/Random support
+getrandom = { version = "0.3", features = ["wasm_js"], default-features = false }
 
 # Utilities
 anyhow = "1.0"
@@ -32,3 +35,6 @@ lto = true
 codegen-units = 1
 strip = true
 panic = "abort"
+
+
+

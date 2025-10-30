@@ -3,8 +3,7 @@
     "qwen3_backend": {
       "candid": "src/qwen3_backend/qwen3_backend.did",
       "package": "qwen3_backend",
-      "type": "rust",
-      "build": "cargo build --target wasm32-unknown-unknown --release --features simd-flash-attn -p qwen3_backend",
+      "type": "rust"
     },
     "qwen3_frontend": {
       "dependencies": [
@@ -19,7 +18,7 @@
   },
   "defaults": {
     "build": {
-      "args": "",
+      "args": "--features simd-flash-attn",
       "packtool": ""
     }
   },

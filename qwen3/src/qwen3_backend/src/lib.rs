@@ -8,7 +8,6 @@ use ic_stable_structures::{
 pub mod storage;
 pub mod candle;
 
-/*
 // Re-export Qwen3 types for Candid interface
 pub use candle::{
     GenerationConfig,
@@ -22,7 +21,6 @@ pub use candle::{
     is_model_loaded,
     get_model_info,
 };
-*/
 
 // Re-export storage functions for Candid
 pub use storage::{
@@ -63,9 +61,9 @@ thread_local! {
     );
 }
 
-// ─────────────────────────────────────────────────────
+// ───────────────────────────────────────────────────────────
 //  Simplified Helper Functions
-// ─────────────────────────────────────────────────────
+// ───────────────────────────────────────────────────────────
 
 /// Save any CandidType directly as Vec<u8>
 pub fn save_data_to_stable<T: CandidType>(key: &str, data: &T) {
@@ -116,8 +114,9 @@ pub fn load_bytes_from_stable(key: &str) -> Option<Vec<u8>> {
 }
 
 #[ic_cdk::init]
-fn init() {
+async fn init() {
     ic_cdk::println!("Qwen3 canister initialized");
+
 }
 
 #[ic_cdk::pre_upgrade]

@@ -3,3 +3,13 @@ members = [
     "src/qwen3_backend"
 ]
 resolver = "2"
+
+[patch.crates-io]
+getrandom = { git = "https://github.com/DrJesseGlass/getrandom", branch = "determinism"  }
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+strip = true
+panic = "abort"

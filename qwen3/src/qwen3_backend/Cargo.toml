@@ -7,24 +7,27 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [features]
-default = ["simd-flash-attn"]
-simd-flash-attn = ["candle-nn/simd-flash-attn", "candle-transformers/simd-flash-attn"]
+default = [] #["simd-flash-attn"]
+#simd-flash-attn = ["candle-nn/simd-flash-attn", "candle-transformers/simd-flash-attn"]
 
 [dependencies]
 # IC dependencies
-candid = "0.10"
-ic-cdk = "0.13"
-ic-stable-structures = "0.6"
+candid = "0.10.20"
+ic-cdk = "0.18.7"
+ic-stable-structures = "0.7.2"
+ic-cdk-timers = "0.12.2"
 serde = { version = "1.0", features = ["derive"] }
 
 # Candle dependencies
-candle-core = { git = "https://github.com/DrJesseGlass/candle", branch = "wasm/examples/qwen", default-features = false }
-candle-nn = { git = "https://github.com/DrJesseGlass/candle", branch = "wasm/examples/qwen", default-features = false }
-candle-transformers = { git = "https://github.com/DrJesseGlass/candle", branch = "wasm/examples/qwen", default-features = false, features = ["simd-flash-attn"] }
-tokenizers = { version = "0.22.1", default-features = false, features = ["unstable_wasm"] }
+#, features = ["simd-flash-attn"] }
+#candle-core = { git = "https://github.com/huggingface/candle", default-features = false }
+#candle-nn = { git = "https://github.com/huggingface/candle", default-features = false }
+#candle-transformers = { git = "https://github.com/huggingface/candle", default-features = false }
+candle-core = { git = "https://github.com/DrJesseGlass/candle", branch = "wasm/qwen/step", default-features = false }
+candle-nn = { git = "https://github.com/DrJesseGlass/candle", branch = "wasm/qwen/step", default-features = false }
+candle-transformers = { git = "https://github.com/DrJesseGlass/candle", branch = "wasm/qwen/step", default-features = false }
 
-# WASM/Random support
-getrandom = { version = "0.3", features = ["wasm_js"], default-features = false }
+tokenizers = { version = "0.22", default-features = false, features = ["fancy-regex"] }
 
 # Utilities
 anyhow = "1.0"

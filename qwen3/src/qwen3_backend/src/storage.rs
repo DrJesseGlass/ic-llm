@@ -265,7 +265,9 @@ pub fn storage_status() -> String {
     let stable_keys = REGISTRIES.with(|map| {
         map.borrow()
             .iter()
-            .map(|(k, v)| format!("{}: {} bytes", k, v.len()))
+            .map(|entry| {
+                format!("{}: {} bytes", entry.key(), entry.value().len())
+            })
             .collect::<Vec<_>>()
     });
 

@@ -35,10 +35,10 @@ fn internal_setup_model() -> Result<(), anyhow::Error> {
     ic_cdk::println!("Loading Qwen3 model from stable storage...");
 
     // Get the GGUF weights from stable storage
-    let weights = crate::storage::get_data();
-    if weights.is_empty() {
-        return Err(anyhow!("No model weights in buffer. Load from stable storage first."));
-    }
+    let weights = match crate::load_bytes_from_stable("model_weights") {
+        Some(bytes) => bytes,
+        None => return Err(anyhow!("Tokenizer not found in stable storage")),
+    };
 
     ic_cdk::println!("Weights size: {} bytes ({:.2} MB)",
         weights.len(),
@@ -188,7 +188,7 @@ fn internal_generate(request: InferenceRequest) -> Result<InferenceResponse, any
 
             // Check instruction limit
             let instructions_so_far = ic_cdk::api::performance_counter(0) - start_instructions;
-            if instructions_so_far > 5_000_000_000 {
+            if instructions_so_far > 30_000_000_000 {
                 ic_cdk::println!("Approaching instruction limit, stopping generation");
                 break;
             }

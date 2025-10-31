@@ -40,7 +40,7 @@ CONFIG_PATH = QWEN_SNAPSHOT / 'config.json'
 
 # IC settings
 CHUNK_SIZE = 1_900_000  # ~1.9MB per chunk (IC message limit is 2MB)
-CANISTER_NAME = "qwen_inference"
+CANISTER_NAME = "qwen3_backend"
 
 
 def run_dfx_command(command: list[str], input_data: bytes = None) -> tuple[bool, str]:

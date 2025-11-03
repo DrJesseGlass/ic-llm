@@ -3,17 +3,31 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useQwenModel } from '../hooks/useQwenModel';
 import './ChatInterface.css';
 
+function formatChatPrompt(userMessage, enableThinking = false) {
+  return `<|im_start|>system
+You are a helpful assistant.<|im_end|>
+<|im_start|>user
+${userMessage}<|im_end|>
+<|im_start|>assistant
+<think>
+`;
+}
+
 export function ChatInterface() {
   const { model, loading, error, loadProgress, generate, reset } = useQwenModel();
 
-  const [prompt, setPrompt] = useState('Once upon a time');
+  const [prompt, setPrompt] = useState('What is the capital of France?');
   const [maxTokens, setMaxTokens] = useState(100);
   const [output, setOutput] = useState('');
+  const [thinkingOutput, setThinkingOutput] = useState('');
   const [generating, setGenerating] = useState(false);
   const [stats, setStats] = useState(null);
+  const enableThinking = true;
+  const [showThinking, setShowThinking] = useState(false);
 
   const abortControllerRef = useRef(null);
   const outputRef = useRef(null);
+  const fullResponseRef = useRef('');
 
   // Auto-scroll output
   useEffect(() => {
@@ -27,22 +41,87 @@ export function ChatInterface() {
 
     setGenerating(true);
     setOutput('');
+    setThinkingOutput('');
     setStats(null);
+    fullResponseRef.current = '';
 
     abortControllerRef.current = new AbortController();
     const startTime = Date.now();
     let tokenCount = 0;
+    let inThinking = enableThinking;
 
     try {
-      await generate(prompt, {
+      const formattedPrompt = formatChatPrompt(prompt);
+
+      await generate(formattedPrompt, {
         maxTokens,
-        temperature: 0.7,
-        topP: 0.9,
+        temperature: 0.0, //0.7,
+        topP: 0.0, //0.9,
         repeatPenalty: 1.1,
         repeatLastN: 64,
+        seed: 42, //Date.now(),
         onToken: (token, count) => {
-          setOutput(prev => prev + token);
+          fullResponseRef.current += token;
           tokenCount = count;
+
+          const fullText = fullResponseRef.current;
+
+          if (enableThinking) {
+            // THINKING MODE: Extract thinking and response separately
+            if (fullText.includes('</think>')) {
+              // Find where thinking ends
+              const thinkEndPos = fullText.indexOf('</think>');
+
+              // Extract everything before </think> and clean it
+              const thinkingRaw = fullText.substring(0, thinkEndPos);
+              const thinkingClean = thinkingRaw
+                .replace(/<think>/g, '')  // Remove ALL <think> tags
+                .replace(/<\|im_start\|>/g, '')
+                .trim();
+              setThinkingOutput(thinkingClean);
+
+              // Extract everything AFTER </think>
+              const responseRaw = fullText.substring(thinkEndPos + 8); // +8 for '</think>'
+              const responseClean = responseRaw
+                .replace(/<\|im_end\|>/g, '')
+                .replace(/<\|endoftext\|>/g, '')
+                .trim();
+              setOutput(responseClean);
+
+              inThinking = false;
+            } else {
+              // Still building thinking - show partial thinking
+              const thinkingPartial = fullText
+                .replace(/<think>/g, '')
+                .replace(/<\|im_start\|>/g, '')
+                .trim();
+              setThinkingOutput(thinkingPartial);
+              setOutput(''); // Nothing in response yet
+            }
+          } else {
+            // NON-THINKING MODE: Remove all thinking content
+            if (fullText.includes('</think>')) {
+              // Extract only the response part (after </think>)
+              const thinkEndPos = fullText.indexOf('</think>');
+              const responseOnly = fullText
+                .substring(thinkEndPos + 8)
+                .replace(/<\|im_end\|>/g, '')
+                .replace(/<\|endoftext\|>/g, '')
+                .trim();
+              setOutput(responseOnly);
+            } else if (fullText.includes('<think>')) {
+              // Still inside thinking - don't show anything
+              setOutput('');
+            } else {
+              // No thinking at all - show cleaned output
+              const cleanText = fullText
+                .replace(/<\|im_start\|>/g, '')
+                .replace(/<\|im_end\|>/g, '')
+                .replace(/<\|endoftext\|>/g, '')
+                .trim();
+              setOutput(cleanText);
+            }
+          }
 
           // Update stats every 10 tokens
           if (count % 10 === 0) {
@@ -84,7 +163,9 @@ export function ChatInterface() {
   const handleReset = () => {
     reset();
     setOutput('');
+    setThinkingOutput('');
     setStats(null);
+    fullResponseRef.current = '';
   };
 
   if (loading) {
@@ -121,7 +202,7 @@ export function ChatInterface() {
   return (
     <div className="chat-container">
       <header className="chat-header">
-        <h1>🚀 Qwen3-0.6B in Browser</h1>
+        <h1>Qwen3-0.6B in Browser</h1>
         <p>Running locally with WebAssembly + SIMD</p>
       </header>
 
@@ -134,7 +215,7 @@ export function ChatInterface() {
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             disabled={generating}
-            placeholder="Enter your prompt..."
+            placeholder="Ask me anything..."
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !generating) {
                 handleGenerate();
@@ -193,8 +274,26 @@ export function ChatInterface() {
           )}
         </div>
 
+        {/* Thinking Section (collapsible) */}
+        {thinkingOutput && (
+          <div className="thinking-section">
+            <button
+              className="thinking-toggle"
+              onClick={() => setShowThinking(!showThinking)}
+            >
+              {showThinking ? '▼' : '▶'} Reasoning Process
+            </button>
+            {showThinking && (
+              <div className="thinking-output">
+                {thinkingOutput}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Main Response Section */}
         <div className="output-section">
-          <label>Output:</label>
+          <label>Response:</label>
           <div
             ref={outputRef}
             className="output-box"

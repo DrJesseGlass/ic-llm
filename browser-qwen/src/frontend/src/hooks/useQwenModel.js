@@ -147,6 +147,7 @@ export function useQwenModel() {
       topP = 0.0, //0.9,
       repeatPenalty = 1.1,
       repeatLastN = 64,
+      seed = 42, //Date.now(),
       onToken = () => {},
       signal = null
     } = options;
@@ -160,7 +161,7 @@ export function useQwenModel() {
       topP,
       repeatPenalty,
       repeatLastN,
-      42 //Fixed seed for deterministic output //Date.now() for random
+      seed
     );
 
     fullText += firstToken;
@@ -172,6 +173,12 @@ export function useQwenModel() {
       if (model.is_eos()) break;
 
       const token = model.next_token();
+
+      // Stop if we hit special tokens
+      if (token.includes('<|im_end|>') || token.includes('<|endoftext|>')) {
+        break;
+      }
+
       fullText += token;
       onToken(token, i + 1);
 

@@ -227,3 +227,49 @@ button:disabled {
   color: #666;
   font-size: 14px;
 }
+.thinking-section {
+  margin: 20px 0;
+  border: 2px solid #667eea;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.thinking-toggle {
+  width: 100%;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: opacity 0.3s;
+}
+
+.thinking-toggle:hover {
+  opacity: 0.9;
+}
+
+.thinking-output {
+  padding: 20px;
+  background: #f0f4ff;
+  border-top: 1px solid #667eea;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #333;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.control-group label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.control-group input[type="checkbox"] {
+  cursor: pointer;
+}

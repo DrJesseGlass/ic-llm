@@ -208,7 +208,7 @@ npm run build
 
 ## License
 
-//MIT License - see [LICENSE](LICENSE) file for details
+MIT License - see [LICENSE](LICENSE) file for details
 
 ## Acknowledgments
 
@@ -216,7 +216,6 @@ npm run build
 - **Unsloth** - Quantized GGUF model
 - **Hugging Face** - Candle ML framework
 - **DFINITY** - Internet Computer platform
-- **Anthropic** - Development assistance
 
 ## Resources
 
@@ -233,5 +232,4 @@ npm run build
 
 ## Contact
 
-//- GitHub Issues: [Project Issues](https://github.com/yourusername/qwen3-ic-browser/issues)
 - Twitter: [@deejayemmgee](https://x.com/deejayemmgee)

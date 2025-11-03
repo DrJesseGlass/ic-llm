@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width" />
+  <title>Qwen3 on Internet Computer</title>
+  <base href="/" />
+  <link rel="icon" href="/favicon.ico" />
+
+  <!-- Critical for WASM with SharedArrayBuffer -->
+  <meta http-equiv="Cross-Origin-Embedder-Policy" content="require-corp" />
+  <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin" />
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+  <script src="/register-sw.js"></script>
+</body>
+
+</html>

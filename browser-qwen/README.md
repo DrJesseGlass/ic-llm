@@ -19,7 +19,7 @@ Run a fully functional 600M parameter language model entirely in your browser, d
 
 ## Live Demo
 
-[Try it here](https://your-canister-id.ic0.app) *(replace with your deployed URL)*
+[Try it here](https://your-canister-id.ic0.app) *(Not Yet Deployed)*
 
 ## Tech Stack
 
@@ -41,8 +41,8 @@ Run a fully functional 600M parameter language model entirely in your browser, d
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/yourusername/qwen3-ic-browser.git
-cd qwen3-ic-browser
+git clone https://github.com/DrJesseGlass/ic-llm.git
+cd ic-llm/qwen3-ic-browser
 ```
 
 ### 2. Install Dependencies
@@ -96,7 +96,7 @@ dfx canister id frontend --network local
 dfx deploy --network ic
 ```
 
-## 🎮 Usage
+## Usage
 
 ### Basic Generation
 
@@ -208,7 +208,7 @@ npm run build
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) file for details
+//MIT License - see [LICENSE](LICENSE) file for details
 
 ## Acknowledgments
 
@@ -218,24 +218,20 @@ MIT License - see [LICENSE](LICENSE) file for details
 - **DFINITY** - Internet Computer platform
 - **Anthropic** - Development assistance
 
-## 📚 Resources
+## Resources
 
 - [Qwen3 Model Card](https://huggingface.co/Qwen/Qwen3-0.6B)
 - [Candle Documentation](https://github.com/huggingface/candle)
 - [Internet Computer Docs](https://internetcomputer.org/docs)
 - [WASM-Bindgen Guide](https://rustwasm.github.io/docs/wasm-bindgen/)
 
-## 🐛 Known Issues
+## Known Issues
 
 - **Firefox**: May require COOP/COEP headers adjustment
 - **Safari**: Limited SharedArrayBuffer support, may have performance issues
 - **Mobile**: Large model size may cause memory issues on lower-end devices
 
-## 💬 Contact
+## Contact
 
-- GitHub Issues: [Project Issues](https://github.com/yourusername/qwen3-ic-browser/issues)
-- Twitter: [@yourhandle](https://twitter.com/yourhandle)
-
----
-
-**Star ⭐ this repo if you find it useful!**
+//- GitHub Issues: [Project Issues](https://github.com/yourusername/qwen3-ic-browser/issues)
+- Twitter: [@deejayemmgee](https://x.com/deejayemmgee)

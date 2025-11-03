@@ -2,10 +2,13 @@
 .vscode/
 .idea/
 **/*~
+*.swp
+*.swo
 
 # Mac OSX temporary files
 .DS_Store
 **/.DS_Store
+Thumbs.db
 
 # dfx temporary files
 .dfx/
@@ -15,6 +18,7 @@
 
 # rust
 target/
+Cargo.lock
 
 # frontend code
 node_modules/
@@ -23,3 +27,21 @@ dist/
 
 # environment variables
 .env
+
+# Large model files - download separately
+*.gguf
+**/tokenizer.json
+
+# WASM build artifacts (generated from Candle)
+src/frontend/assets/wasm/*.wasm
+src/frontend/assets/wasm/*.js
+src/frontend/public/assets/wasm/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-error.log*
+
+# Package lock files
+# package-lock.json
+# yarn.lock

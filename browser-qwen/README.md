@@ -1,60 +1,241 @@
-# `browser-qwen`
+# Qwen3-0.6B on Internet Computer
 
-Welcome to your new `browser-qwen` project and to the Internet Computer development community. By default, creating a new project adds this README and some template files to your project directory. You can edit these template files to customize your project and to include your own code to speed up the development cycle.
+Run a fully functional 600M parameter language model entirely in your browser, deployed on the Internet Computer blockchain.
 
-To get started, you might want to explore the project directory structure and the default configuration file. Working with this project in your development environment will not affect any production deployment or identity tokens.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![IC](https://img.shields.io/badge/Internet_Computer-Powered-29abe2)](https://internetcomputer.org/)
+[![Rust](https://img.shields.io/badge/Rust-WASM-orange)](https://www.rust-lang.org/)
+[![React](https://img.shields.io/badge/React-18-blue)](https://reactjs.org/)
 
-To learn more before you start working with `browser-qwen`, see the following documentation available online:
+## Features
 
-- [Quick Start](https://internetcomputer.org/docs/current/developer-docs/setup/deploy-locally)
-- [SDK Developer Tools](https://internetcomputer.org/docs/current/developer-docs/setup/install)
-- [Rust Canister Development Guide](https://internetcomputer.org/docs/current/developer-docs/backend/rust/)
-- [ic-cdk](https://docs.rs/ic-cdk)
-- [Candid Introduction](https://internetcomputer.org/docs/building-apps/interact-with-canisters/candid/candid-concepts)
+- **100% Browser-Based**: No server-side inference, runs entirely in WebAssembly
+- **9 tokens/sec**: Fast inference using SIMD optimizations
+- **Decentralized Hosting**: Deployed on Internet Computer canisters
+- **Deterministic Generation**: Reproducible outputs with seed control
+- **Thinking Mode**: Optional reasoning display showing model's thought process
+- **Quantized Model**: Q8 quantization for optimal speed/quality balance
+- **Progressive Loading**: Smart chunked download with progress tracking
 
-If you want to start working on your project right away, you might want to try the following commands:
+## Live Demo
 
+[Try it here](https://your-canister-id.ic0.app) *(replace with your deployed URL)*
+
+## Tech Stack
+
+- **Model**: [Qwen3-0.6B](https://huggingface.co/Qwen/Qwen3-0.6B) (Alibaba Cloud)
+- **Inference**: [Candle](https://github.com/huggingface/candle) ML framework (Rust)
+- **Frontend**: React + Vite
+- **Deployment**: Internet Computer (ICP)
+- **Optimization**: WebAssembly + SIMD
+
+## Prerequisites
+
+- Node.js ≥ 16.0.0
+- npm ≥ 7.0.0
+- dfx (IC SDK) - [Install here](https://internetcomputer.org/docs/current/developer-docs/getting-started/install/)
+- Rust + wasm-pack - [Install here](https://rustwasm.github.io/wasm-pack/installer/)
+- ~700MB disk space for model files
+
+## Installation
+
+### 1. Clone the Repository
 ```bash
-cd browser-qwen/
-dfx help
-dfx canister --help
+git clone https://github.com/yourusername/qwen3-ic-browser.git
+cd qwen3-ic-browser
 ```
 
-## Running the project locally
-
-If you want to test your project locally, you can use the following commands:
-
+### 2. Install Dependencies
 ```bash
-# Starts the replica, running in the background
+npm install
+cd src/frontend && npm install && cd ../..
+```
+
+### 3. Download Model Files
+```bash
+cd src/frontend/public/assets/wasm
+
+# Download model weights (~610MB)
+wget https://huggingface.co/unsloth/Qwen3-0.6B-GGUF/resolve/main/Qwen3-0.6B-Q8_0.gguf
+
+# Download tokenizer (~11MB)
+wget https://huggingface.co/Qwen/Qwen3-0.6B/resolve/main/tokenizer.json
+
+cd ../../../../
+```
+
+### 4. Build WASM Artifacts
+
+From DrJesseGlass's [Candle Fork](https://github.com/DrJesseGlass/candle/tree/examples/wasm/quant-qwen3) repository:
+```bash
+cd candle/examples/wasm/quant-qwen3
+wasm-pack build --target web --release
+```
+
+Copy the generated files to your project:
+```bash
+cp pkg/candle_wasm_example_quant_qwen3_bg.wasm <path-to-project>/src/frontend/public/assets/wasm/
+cp pkg/candle_wasm_example_quant_qwen3.js <path-to-project>/src/frontend/public/assets/wasm/
+```
+
+### 5. Deploy Locally
+```bash
+# Start local IC replica
 dfx start --background
 
-# Deploys your canisters to the replica and generates your candid interface
+# Deploy canisters
 dfx deploy
+
+# Get your local URL
+dfx canister id frontend --network local
+# Open: http://<canister-id>.localhost:4943
 ```
 
-Once the job completes, your application will be available at `http://localhost:4943?canisterId={asset_canister_id}`.
-
-If you have made changes to your backend canister, you can generate a new candid interface with
-
+### 6. Deploy to Mainnet
 ```bash
-npm run generate
+dfx deploy --network ic
 ```
 
-at any time. This is recommended before starting the frontend development server, and will be run automatically any time you run `dfx deploy`.
+## 🎮 Usage
 
-If you are making frontend changes, you can start a development server with
+### Basic Generation
 
+1. Enter a prompt in the text box
+2. Click "Generate" or press Enter
+3. Watch as the model generates text token-by-token
+4. View generation stats (tokens, time, speed)
+
+### Thinking Mode
+
+Click the "▶ Reasoning Process" dropdown to see the model's internal reasoning:
+```
+▼ Reasoning Process
+Okay, the user is asking about X. I need to consider Y and Z...
+
+Response:
+The answer is based on...
+```
+
+### Configuration
+
+- **Max Tokens**: Control generation length (1-500)
+- **Temperature**: Modify in `useQwenModel.js` (default: 0.7)
+- **Seed**: Change for deterministic/random outputs
+- **Stop Generation**: Click "Stop" during generation
+
+## Project Structure
+```
+qwen3-ic-browser/
+├── dfx.json                    # IC canister configuration
+├── src/
+│   └── frontend/
+│       ├── public/
+│       │   ├── assets/wasm/    # Model files & WASM artifacts
+│       │   └── .ic-assets.json5 # Asset canister config
+│       ├── src/
+│       │   ├── components/
+│       │   │   ├── ChatInterface.jsx
+│       │   │   └── ChatInterface.css
+│       │   ├── hooks/
+│       │   │   └── useQwenModel.js  # Model loading & inference
+│       │   ├── main.jsx
+│       │   └── index.scss
+│       ├── vite.config.js
+│       └── package.json
+└── README.md
+```
+
+## Architecture
+
+### Model Loading Pipeline
+
+1. **WASM Initialization**: Load Candle runtime
+2. **Chunked Download**: Stream 610MB model with progress tracking
+3. **Efficient Assembly**: Combine chunks with event loop yielding
+4. **Model Instantiation**: Parse GGUF format in WASM
+5. **Ready State**: Model available for inference
+
+### Inference Flow
+```
+User Input → Chat Template → Model.init_with_prompt() → 
+Token Generation Loop → Token Filtering → UI Update
+```
+
+### Thinking Mode Architecture
+```
+Prompt with <think> tag → Model generates:
+  <think>reasoning content</think>response content →
+Parse and split → Display separately
+```
+
+## Performance
+
+- **Initial Load**: ~30-60s (one-time, cached after)
+- **Inference Speed**: ~9 tokens/second
+- **Model Size**: 610MB (Q8 quantization)
+- **Memory Usage**: ~800MB browser heap
+
+### Optimization Tips
+
+1. **Service Worker Caching**: Add for instant subsequent loads
+2. **Q4 Quantization**: Use smaller model (~380MB) for faster load
+3. **CDN Hosting**: Host model on external CDN, reduce IC storage costs
+
+## Contributing
+
+Contributions welcome! Areas for improvement:
+
+- [ ] Multi-turn conversation support
+- [ ] System prompt customization UI
+- [ ] Model selection (different Qwen variants)
+- [ ] Export conversation history
+- [ ] Mobile optimization
+- [ ] Service worker implementation
+- [ ] Performance benchmarking suite
+
+### Development Setup
 ```bash
-npm start
+# Install dependencies
+npm install
+
+# Start local development (with hot reload)
+cd src/frontend
+npm run dev
+
+# Build for production
+npm run build
 ```
 
-Which will start a server at `http://localhost:8080`, proxying API requests to the replica at port 4943.
+## License
 
-### Note on frontend environment variables
+MIT License - see [LICENSE](LICENSE) file for details
 
-If you are hosting frontend code somewhere without using DFX, you may need to make one of the following adjustments to ensure your project does not fetch the root key in production:
+## Acknowledgments
 
-- set`DFX_NETWORK` to `ic` if you are using Webpack
-- use your own preferred method to replace `process.env.DFX_NETWORK` in the autogenerated declarations
-  - Setting `canisters -> {asset_canister_id} -> declarations -> env_override to a string` in `dfx.json` will replace `process.env.DFX_NETWORK` with the string in the autogenerated declarations
-- Write your own `createActor` constructor
+- **Qwen Team** (Alibaba Cloud) - Base model
+- **Unsloth** - Quantized GGUF model
+- **Hugging Face** - Candle ML framework
+- **DFINITY** - Internet Computer platform
+- **Anthropic** - Development assistance
+
+## 📚 Resources
+
+- [Qwen3 Model Card](https://huggingface.co/Qwen/Qwen3-0.6B)
+- [Candle Documentation](https://github.com/huggingface/candle)
+- [Internet Computer Docs](https://internetcomputer.org/docs)
+- [WASM-Bindgen Guide](https://rustwasm.github.io/docs/wasm-bindgen/)
+
+## 🐛 Known Issues
+
+- **Firefox**: May require COOP/COEP headers adjustment
+- **Safari**: Limited SharedArrayBuffer support, may have performance issues
+- **Mobile**: Large model size may cause memory issues on lower-end devices
+
+## 💬 Contact
+
+- GitHub Issues: [Project Issues](https://github.com/yourusername/qwen3-ic-browser/issues)
+- Twitter: [@yourhandle](https://twitter.com/yourhandle)
+
+---
+
+**Star ⭐ this repo if you find it useful!**

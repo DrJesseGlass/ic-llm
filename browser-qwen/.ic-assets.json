@@ -1,0 +1,33 @@
+[
+  {
+    "match": "**/*.wasm",
+    "cache": {
+      "max_age": 31536000
+    },
+    "headers": {
+      "Content-Type": "application/wasm",
+      "Cross-Origin-Embedder-Policy": "require-corp",
+      "Cross-Origin-Opener-Policy": "same-origin"
+    }
+  },
+  {
+    "match": "**/*.gguf",
+    "cache": {
+      "max_age": 31536000
+    },
+    "headers": {
+      "Content-Type": "application/octet-stream",
+      "Cross-Origin-Embedder-Policy": "require-corp"
+    },
+    "allow_raw_access": true
+  },
+  {
+    "match": "**/*.json",
+    "cache": {
+      "max_age": 31536000
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+]

@@ -1,0 +1,31 @@
+[
+  {
+    "match": "**/*",
+    "headers": {
+      "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'",
+      "Cross-Origin-Embedder-Policy": "require-corp",
+      "Cross-Origin-Opener-Policy": "same-origin",
+      "Access-Control-Expose-Headers": "Content-Length, Content-Type, Accept-Ranges"
+    }
+  },
+  {
+    "match": "**/*.gguf",
+    "headers": {
+      "Content-Type": "application/octet-stream",
+      "Access-Control-Expose-Headers": "Content-Length, Content-Type, Accept-Ranges"
+    },
+    "cache": {
+      "max_age": 31536000
+    },
+    "allow_raw_access": true
+  },
+  {
+    "match": "**/*.wasm",
+    "headers": {
+      "Content-Type": "application/wasm"
+    },
+    "cache": {
+      "max_age": 31536000
+    }
+  }
+]

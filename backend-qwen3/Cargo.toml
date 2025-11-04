@@ -5,7 +5,11 @@ members = [
 resolver = "2"
 
 [patch.crates-io]
-getrandom = { git = "https://github.com/DrJesseGlass/getrandom", branch = "determinism"  }
+getrandom = { git = "https://github.com/DrJesseGlass/getrandom", tag = "v0.3.0-determinism.1" }
+
+[patch.'https://github.com/DrJesseGlass/candle']
+candle-core = { git = "https://github.com/huggingface/candle", default-features = false }
+candle-nn = { git = "https://github.com/huggingface/candle", default-features = false }
 
 [profile.release]
 opt-level = "z"

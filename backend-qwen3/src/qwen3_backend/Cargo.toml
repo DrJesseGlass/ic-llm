@@ -20,12 +20,16 @@ serde = { version = "1.0", features = ["derive"] }
 
 # Candle dependencies
 #, features = ["simd-flash-attn"] }
-#candle-core = { git = "https://github.com/huggingface/candle", default-features = false }
-#candle-nn = { git = "https://github.com/huggingface/candle", default-features = false }
-#candle-transformers = { git = "https://github.com/huggingface/candle", default-features = false }
-candle-core = { git = "https://github.com/DrJesseGlass/candle", branch = "wasm/qwen/step", default-features = false }
-candle-nn = { git = "https://github.com/DrJesseGlass/candle", branch = "wasm/qwen/step", default-features = false }
+candle-core = { git = "https://github.com/huggingface/candle", default-features = false }
+candle-nn = { git = "https://github.com/huggingface/candle", default-features = false }
 candle-transformers = { git = "https://github.com/DrJesseGlass/candle", branch = "wasm/qwen/step", default-features = false }
+
+#candle-transformers = { git = "https://github.com/huggingface/candle", default-features = false }
+#candle-core = { git = "https://github.com/DrJesseGlass/candle", branch = "wasm/qwen/step", default-features = false }
+#candle-nn = { git = "https://github.com/DrJesseGlass/candle", branch = "wasm/qwen/step", default-features = false }
+#candle-core = {version = "0.9.1", default-features = false}
+#candle-nn = {version = "0.9.1", default-features = false}
+#candle-transformers = { git = "https://github.com/huggingface/candle", default-features = false }
 
 tokenizers = { version = "0.22", default-features = false, features = ["fancy-regex"] }
 

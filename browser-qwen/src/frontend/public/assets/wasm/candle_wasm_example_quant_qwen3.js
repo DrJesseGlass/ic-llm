@@ -116,19 +116,6 @@ function passStringToWasm0(arg, malloc, realloc) {
     WASM_VECTOR_LEN = offset;
     return ptr;
 }
-
-function passArray8ToWasm0(arg, malloc) {
-    const ptr = malloc(arg.length * 1, 1) >>> 0;
-    getUint8ArrayMemory0().set(arg, ptr / 1);
-    WASM_VECTOR_LEN = arg.length;
-    return ptr;
-}
-
-function takeFromExternrefTable0(idx) {
-    const value = wasm.__wbindgen_externrefs.get(idx);
-    wasm.__externref_table_dealloc(idx);
-    return value;
-}
 /**
  * @returns {ProfileStats}
  */
@@ -192,6 +179,19 @@ export function log_wasm_memory() {
     wasm.log_wasm_memory();
 }
 
+function passArray8ToWasm0(arg, malloc) {
+    const ptr = malloc(arg.length * 1, 1) >>> 0;
+    getUint8ArrayMemory0().set(arg, ptr / 1);
+    WASM_VECTOR_LEN = arg.length;
+    return ptr;
+}
+
+function takeFromExternrefTable0(idx) {
+    const value = wasm.__wbindgen_externrefs.get(idx);
+    wasm.__externref_table_dealloc(idx);
+    return value;
+}
+
 const ModelFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_model_free(ptr >>> 0, 1));
@@ -236,15 +236,16 @@ export class Model {
      * @param {number} repeat_penalty
      * @param {number} repeat_last_n
      * @param {number} seed
+     * @param {boolean} enable_thinking
      * @returns {string}
      */
-    init_with_prompt(prompt, temp, top_p, repeat_penalty, repeat_last_n, seed) {
+    init_with_prompt(prompt, temp, top_p, repeat_penalty, repeat_last_n, seed, enable_thinking) {
         let deferred3_0;
         let deferred3_1;
         try {
             const ptr0 = passStringToWasm0(prompt, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
             const len0 = WASM_VECTOR_LEN;
-            const ret = wasm.model_init_with_prompt(this.__wbg_ptr, ptr0, len0, temp, top_p, repeat_penalty, repeat_last_n, seed);
+            const ret = wasm.model_init_with_prompt(this.__wbg_ptr, ptr0, len0, temp, top_p, repeat_penalty, repeat_last_n, seed, enable_thinking);
             var ptr2 = ret[0];
             var len2 = ret[1];
             if (ret[3]) {

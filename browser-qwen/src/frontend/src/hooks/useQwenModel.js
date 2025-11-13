@@ -148,6 +148,7 @@ export function useQwenModel() {
       repeatPenalty = 1.1,
       repeatLastN = 64,
       seed = 42, //Date.now(),
+      enableThinking = true,
       onToken = () => {},
       signal = null
     } = options;
@@ -161,7 +162,8 @@ export function useQwenModel() {
       topP,
       repeatPenalty,
       repeatLastN,
-      seed
+      seed,
+      enableThinking
     );
 
     fullText += firstToken;

@@ -21,10 +21,20 @@ serde = { version = "1.0", features = ["derive"] }
 # Candle dependencies
 #candle-core/nn/transformers = {version = "0.9.1", default-features = false}
 # this more complex set up is all to enable a minor tweak to Qwen3
+#candle-core = { git = "https://github.com/huggingface/candle", tag = "0.9.2-alpha.1", default-features = false }
+#candle-nn = { git = "https://github.com/huggingface/candle", tag = "0.9.2-alpha.1", default-features = false }
+#candle-transformers = { git = "https://github.com/DrJesseGlass/candle", branch = "example/wasm/quant-qwen3", default-features = false }
+
+#candle-core = {version = "0.9.1", default-features = false}
+#candle-nn = {version = "0.9.1", default-features = false}
+#candle-transformers = {version = "0.9.1", default-features = false}
+
+#qwen3 not in 0.9.1
 candle-core = { git = "https://github.com/huggingface/candle", tag = "0.9.2-alpha.1", default-features = false }
 candle-nn = { git = "https://github.com/huggingface/candle", tag = "0.9.2-alpha.1", default-features = false }
-candle-transformers = { git = "https://github.com/DrJesseGlass/candle", branch = "example/wasm/quant-qwen3", default-features = false }
+candle-transformers = { git = "https://github.com/huggingface/candle", tag = "0.9.2-alpha.1", default-features = false }
 
+# crate does not include examples
 tokenizers = { version = "0.22", default-features = false, features = ["fancy-regex"] }
 
 # Utilities

@@ -42,7 +42,7 @@
 }
 
 .loading-hint {
-  color: #666;
+  color: #444;
   font-size: 14px;
   margin-top: 10px;
 }
@@ -68,7 +68,7 @@
 }
 
 .chat-header p {
-  color: #666;
+  color: #444;
   font-size: 16px;
 }
 
@@ -225,7 +225,7 @@ button:disabled {
   margin-top: 30px;
   padding-top: 20px;
   border-top: 1px solid #e0e0e0;
-  color: #666;
+  color: #444;
   font-size: 14px;
 }
 .thinking-section {

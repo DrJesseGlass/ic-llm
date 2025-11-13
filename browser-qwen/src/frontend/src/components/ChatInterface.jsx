@@ -3,14 +3,51 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useQwenModel } from '../hooks/useQwenModel';
 import './ChatInterface.css';
 
-function formatChatPrompt(userMessage, enableThinking = false) {
-  return `<|im_start|>system
-You are a helpful assistant.<|im_end|>
-<|im_start|>user
-${userMessage}<|im_end|>
-<|im_start|>assistant
-<think>
-`;
+function parseResponse(fullText, enableThinking) {
+  if (enableThinking) {
+    const lastThinkStart = fullText.lastIndexOf('<think>');
+    const lastThinkEnd = fullText.lastIndexOf('</think>');
+
+    // If last <think> comes after last </think>, we're still in thinking mode
+    if (lastThinkStart > lastThinkEnd) {
+      // Currently inside a <think> block - everything is thinking
+      return {
+        thinking: cleanTokens(fullText),
+        response: ''
+      };
+    } else if (lastThinkEnd !== -1) {
+      // We have a closed </think> and no <think> after it - split here
+      const thinkingRaw = fullText.substring(0, lastThinkEnd);
+      const responseRaw = fullText.substring(lastThinkEnd + 8); // Skip '</think>'
+
+      return {
+        thinking: cleanTokens(thinkingRaw),
+        response: cleanTokens(responseRaw)
+      };
+    } else {
+      // No tags yet - still building initial thinking
+      return {
+        thinking: cleanTokens(fullText),
+        response: ''
+      };
+    }
+  } else {
+    // Non-thinking mode: everything is response
+    return {
+      thinking: '',
+      response: cleanTokens(fullText)
+    };
+  }
+}
+
+function cleanTokens(text) {
+  return text
+    .replace(/<\|im_start\|>/g, '')
+    .replace(/<\|im_end\|>/g, '')
+    .replace(/<\|endoftext\|>/g, '')
+    .replace(/<think>/g, '')
+    .replace(/<\/think>/g, '')
+    .trim();
 }
 
 export function ChatInterface() {
@@ -22,7 +59,7 @@ export function ChatInterface() {
   const [thinkingOutput, setThinkingOutput] = useState('');
   const [generating, setGenerating] = useState(false);
   const [stats, setStats] = useState(null);
-  const enableThinking = true;
+  const [enableThinking, setEnableThinking] = useState(true);
   const [showThinking, setShowThinking] = useState(false);
 
   const abortControllerRef = useRef(null);
@@ -45,16 +82,17 @@ export function ChatInterface() {
     setStats(null);
     fullResponseRef.current = '';
 
+    reset();
+
     abortControllerRef.current = new AbortController();
     const startTime = Date.now();
     let tokenCount = 0;
-    let inThinking = enableThinking;
 
     try {
-      const formattedPrompt = formatChatPrompt(prompt);
 
-      await generate(formattedPrompt, {
+      await generate(prompt, {
         maxTokens,
+        enableThinking,
         temperature: 0.0, //0.7,
         topP: 0.0, //0.9,
         repeatPenalty: 1.1,
@@ -66,62 +104,10 @@ export function ChatInterface() {
 
           const fullText = fullResponseRef.current;
 
-          if (enableThinking) {
-            // THINKING MODE: Extract thinking and response separately
-            if (fullText.includes('</think>')) {
-              // Find where thinking ends
-              const thinkEndPos = fullText.indexOf('</think>');
+          const { thinking, response } = parseResponse(fullText, enableThinking);
 
-              // Extract everything before </think> and clean it
-              const thinkingRaw = fullText.substring(0, thinkEndPos);
-              const thinkingClean = thinkingRaw
-                .replace(/<think>/g, '')  // Remove ALL <think> tags
-                .replace(/<\|im_start\|>/g, '')
-                .trim();
-              setThinkingOutput(thinkingClean);
-
-              // Extract everything AFTER </think>
-              const responseRaw = fullText.substring(thinkEndPos + 8); // +8 for '</think>'
-              const responseClean = responseRaw
-                .replace(/<\|im_end\|>/g, '')
-                .replace(/<\|endoftext\|>/g, '')
-                .trim();
-              setOutput(responseClean);
-
-              inThinking = false;
-            } else {
-              // Still building thinking - show partial thinking
-              const thinkingPartial = fullText
-                .replace(/<think>/g, '')
-                .replace(/<\|im_start\|>/g, '')
-                .trim();
-              setThinkingOutput(thinkingPartial);
-              setOutput(''); // Nothing in response yet
-            }
-          } else {
-            // NON-THINKING MODE: Remove all thinking content
-            if (fullText.includes('</think>')) {
-              // Extract only the response part (after </think>)
-              const thinkEndPos = fullText.indexOf('</think>');
-              const responseOnly = fullText
-                .substring(thinkEndPos + 8)
-                .replace(/<\|im_end\|>/g, '')
-                .replace(/<\|endoftext\|>/g, '')
-                .trim();
-              setOutput(responseOnly);
-            } else if (fullText.includes('<think>')) {
-              // Still inside thinking - don't show anything
-              setOutput('');
-            } else {
-              // No thinking at all - show cleaned output
-              const cleanText = fullText
-                .replace(/<\|im_start\|>/g, '')
-                .replace(/<\|im_end\|>/g, '')
-                .replace(/<\|endoftext\|>/g, '')
-                .trim();
-              setOutput(cleanText);
-            }
-          }
+          setThinkingOutput(thinking);
+          setOutput(response);
 
           // Update stats every 10 tokens
           if (count % 10 === 0) {
@@ -134,6 +120,7 @@ export function ChatInterface() {
             });
           }
         },
+
         signal: abortControllerRef.current.signal
       });
 
@@ -235,6 +222,19 @@ export function ChatInterface() {
                 onChange={(e) => setMaxTokens(parseInt(e.target.value) || 100)}
                 disabled={generating}
               />
+            </div>
+
+            <div className="control-group">
+              <label htmlFor="enableThinking">
+                <input
+                  id="enableThinking"
+                  type="checkbox"
+                  checked={enableThinking}
+                  onChange={(e) => setEnableThinking(e.target.checked)}
+                  disabled={generating}
+                />
+                Enable Thinking
+              </label>
             </div>
 
             <div className="button-group">

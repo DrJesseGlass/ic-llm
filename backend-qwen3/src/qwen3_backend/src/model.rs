@@ -100,7 +100,7 @@ impl Model {
         seed: u64,
     ) -> Result<String, String> {
         // Clear KV cache
-        self.model.clear_kv_cache();
+        self.clear_kv_cache();
 
         let temp = if temp <= 0. { None } else { Some(temp) };
         let top_p = if top_p <= 0. || top_p >= 1. {
@@ -147,9 +147,15 @@ impl Model {
         self.tokens.len()
     }
 
+    fn clear_kv_cache(&mut self) {
+        for layer in &mut self.model.layers {
+            layer.self_attn.kv_cache.reset();
+        }
+    }
+
     pub fn reset(&mut self) {
         self.tokens.clear();
-        self.model.clear_kv_cache();
+        self.clear_kv_cache();
     }
 
     fn process(&mut self, tokens: &[u32]) -> candle_core::Result<String> {

@@ -155,7 +155,7 @@ fn internal_generate(request: InferenceRequest) -> Result<InferenceResponse, any
             .ok_or_else(|| anyhow!("Model not initialized. Call setup_model first."))?;
 
         // Reset state
-        model.model.clear_kv_cache();
+        //model.clear_kv_cache();
         model.tokens.clear();
 
         // Setup generation parameters
@@ -269,7 +269,7 @@ pub fn reset_generation() -> EmptyResult {
     QWEN_MODEL.with(|cell| {
         if let Some(model) = cell.borrow_mut().as_mut() {
             model.tokens.clear();
-            model.model.clear_kv_cache();
+            //model.clear_kv_cache();
             EmptyResult::Ok
         } else {
             EmptyResult::Err("Model not initialized".to_string())

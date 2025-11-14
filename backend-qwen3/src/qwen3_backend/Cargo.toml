@@ -17,9 +17,9 @@ ic-stable-structures = "0.7.2"
 ic-cdk-timers = "0.12.2"
 serde = { version = "1.0", features = ["derive"] }
 
-# Dev kit (your utilities) - IMPORTANT: Enable required features
-#ic-dev-kit-rs = { git = "https://github.com/DrJesseGlass/ic-dev-kit-rs", branch = "main", features = ["text-generation", "storage", "candle", "telemetry"] }
-ic-dev-kit-rs = { path = "../../../../ic-dev-kit-rs", features = ["text-generation", "storage", "candle", "telemetry"] }
+# Dev kit
+ic-dev-kit-rs = { git = "https://github.com/DrJesseGlass/ic-dev-kit-rs", branch = "main", features = ["text-generation", "storage", "candle", "telemetry"] }
+#ic-dev-kit-rs = { path = "../../../../ic-dev-kit-rs", features = ["text-generation", "storage", "candle", "telemetry"] }
 
 # Candle dependencies
 #qwen3 not in 0.9.1 (reset cache still in PR)

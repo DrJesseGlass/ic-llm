@@ -7,8 +7,7 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [features]
-default = [] #["simd-flash-attn"]
-#simd-flash-attn = ["candle-nn/simd-flash-attn", "candle-transformers/simd-flash-attn"]
+default = []
 
 [dependencies]
 # IC dependencies
@@ -18,18 +17,15 @@ ic-stable-structures = "0.7.2"
 ic-cdk-timers = "0.12.2"
 serde = { version = "1.0", features = ["derive"] }
 
-# Candle dependencies
-#candle-core/nn/transformers = {version = "0.9.1", default-features = false}
-# this more complex set up is all to enable a minor tweak to Qwen3
-#candle-core = { git = "https://github.com/huggingface/candle", tag = "0.9.2-alpha.1", default-features = false }
-#candle-nn = { git = "https://github.com/huggingface/candle", tag = "0.9.2-alpha.1", default-features = false }
-#candle-transformers = { git = "https://github.com/DrJesseGlass/candle", branch = "example/wasm/quant-qwen3", default-features = false }
+# Dev kit
+ic-dev-kit-rs = { git = "https://github.com/DrJesseGlass/ic-dev-kit-rs", branch = "main", features = ["text-generation", "storage", "candle", "telemetry"] }
+#ic-dev-kit-rs = { path = "../../../../ic-dev-kit-rs", features = ["text-generation", "storage", "candle", "telemetry"] }
 
+# Candle dependencies
+#qwen3 not in 0.9.1 (reset cache still in PR)
 #candle-core = {version = "0.9.1", default-features = false}
 #candle-nn = {version = "0.9.1", default-features = false}
 #candle-transformers = {version = "0.9.1", default-features = false}
-
-#qwen3 not in 0.9.1
 candle-core = { git = "https://github.com/huggingface/candle", tag = "0.9.2-alpha.1", default-features = false }
 candle-nn = { git = "https://github.com/huggingface/candle", tag = "0.9.2-alpha.1", default-features = false }
 candle-transformers = { git = "https://github.com/huggingface/candle", tag = "0.9.2-alpha.1", default-features = false }
@@ -46,6 +42,3 @@ lto = true
 codegen-units = 1
 strip = true
 panic = "abort"
-
-
-

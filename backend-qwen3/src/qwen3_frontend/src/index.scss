@@ -1,41 +1,142 @@
-body {
-  font-family: sans-serif;
-  font-size: 1.5rem;
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-img {
-  max-width: 50vw;
-  max-height: 25vw;
-  display: block;
-  margin: auto;
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+  background: #0f0f0f;
+  color: #e0e0e0;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem;
+}
+
+header {
+  margin-bottom: 2rem;
+  text-align: center;
+
+  h1 {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #fff;
+  }
+
+  .subtitle {
+    color: #888;
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+  }
+}
+
+.status-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+
+  .status {
+    font-size: 0.85rem;
+    &.online { color: #4ade80; }
+    &.offline { color: #f87171; }
+  }
 }
 
 form {
   display: flex;
-  justify-content: center;
-  gap: 0.5em;
-  flex-flow: row wrap;
-  max-width: 40vw;
-  margin: auto;
-  align-items: baseline;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-button[type="submit"] {
-  padding: 5px 20px;
-  margin: 10px auto;
-  float: right;
+textarea {
+  width: 100%;
+  padding: 1rem;
+  font-size: 1rem;
+  font-family: inherit;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  color: #e0e0e0;
+  resize: vertical;
+
+  &:focus {
+    outline: none;
+    border-color: #555;
+  }
+
+  &::placeholder {
+    color: #666;
+  }
 }
 
-#greeting {
-  margin: 10px auto;
-  padding: 10px 60px;
-  border: 1px solid #222;
+button {
+  padding: 0.75rem 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 }
 
-#greeting:empty {
-  display: none;
+.btn-primary {
+  background: #3b82f6;
+  color: #fff;
+
+  &:hover:not(:disabled) {
+    background: #2563eb;
+  }
 }
 
-.browser-warning {
-  display: none;
+.btn-secondary {
+  background: #262626;
+  color: #e0e0e0;
+  border: 1px solid #333;
+
+  &:hover:not(:disabled) {
+    background: #333;
+  }
+}
+
+.response {
+  margin-top: 2rem;
+  padding: 1.25rem;
+  background: #1a1a1a;
+  border-radius: 8px;
+  border: 1px solid #333;
+
+  &.error {
+    border-color: #f87171;
+  }
+
+  .output {
+    font-size: 1rem;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .meta {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #333;
+    display: flex;
+    gap: 1.5rem;
+    font-size: 0.8rem;
+    color: #888;
+  }
+
+  .error-msg {
+    color: #f87171;
+  }
 }

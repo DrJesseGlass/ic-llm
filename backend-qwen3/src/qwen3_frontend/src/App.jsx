@@ -20,7 +20,7 @@ function App() {
     try {
       const result = await qwen3_backend.generate({
         prompt,
-        config: [],  // None - uses defaults
+        config: [],
       });
       setResponse(result);
     } catch (err) {
@@ -30,42 +30,51 @@ function App() {
   }
 
   return (
-    <main style={{ padding: '2rem', maxWidth: '600px', margin: '0 auto' }}>
-      <h1>Qwen3 on IC</h1>
+    <div className="container">
+      <header>
+        <h1>Qwen3 on IC</h1>
+        <p className="subtitle">0.6B parameter LLM running on-chain</p>
+      </header>
 
-      <button onClick={checkModel} style={{ marginBottom: '1rem' }}>
-        Check Model Status
-      </button>
-      {modelLoaded !== null && (
-        <p>Model loaded: {modelLoaded ? '✅' : '❌'}</p>
-      )}
+      <div className="status-bar">
+        <button onClick={checkModel} className="btn-secondary">
+          Check Model
+        </button>
+        {modelLoaded !== null && (
+          <span className={`status ${modelLoaded ? 'online' : 'offline'}`}>
+            {modelLoaded ? '● Model Ready' : '○ Model Not Loaded'}
+          </span>
+        )}
+      </div>
 
       <form onSubmit={handleGenerate}>
         <textarea
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
-          placeholder="Enter prompt..."
+          placeholder="Enter your prompt..."
           rows={4}
-          style={{ width: '100%', marginBottom: '1rem' }}
         />
-        <button type="submit" disabled={loading || !prompt}>
+        <button type="submit" className="btn-primary" disabled={loading || !prompt}>
           {loading ? 'Generating...' : 'Generate'}
         </button>
       </form>
 
       {response && (
-        <div style={{ marginTop: '1rem', padding: '1rem', background: '#f5f5f5' }}>
+        <div className={`response ${response.success ? '' : 'error'}`}>
           {response.success ? (
             <>
-              <p><strong>Output:</strong> {response.generated_text}</p>
-              <p><small>Tokens: {response.tokens_generated} | Instructions: {Number(response.instructions_used).toLocaleString()}</small></p>
+              <div className="output">{response.generated_text}</div>
+              <div className="meta">
+                <span>Tokens: {Number(response.tokens_generated)}</span>
+                <span>Instructions: {Number(response.instructions_used).toLocaleString()}</span>
+              </div>
             </>
           ) : (
-            <p style={{ color: 'red' }}>Error: {response.error}</p>
+            <div className="error-msg">Error: {response.error}</div>
           )}
         </div>
       )}
-    </main>
+    </div>
   );
 }
 

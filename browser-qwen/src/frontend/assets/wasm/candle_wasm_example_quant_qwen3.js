@@ -116,19 +116,6 @@ function passStringToWasm0(arg, malloc, realloc) {
     WASM_VECTOR_LEN = offset;
     return ptr;
 }
-
-function passArray8ToWasm0(arg, malloc) {
-    const ptr = malloc(arg.length * 1, 1) >>> 0;
-    getUint8ArrayMemory0().set(arg, ptr / 1);
-    WASM_VECTOR_LEN = arg.length;
-    return ptr;
-}
-
-function takeFromExternrefTable0(idx) {
-    const value = wasm.__wbindgen_externrefs.get(idx);
-    wasm.__externref_table_dealloc(idx);
-    return value;
-}
 /**
  * @returns {ProfileStats}
  */
@@ -192,6 +179,88 @@ export function log_wasm_memory() {
     wasm.log_wasm_memory();
 }
 
+function passArray8ToWasm0(arg, malloc) {
+    const ptr = malloc(arg.length * 1, 1) >>> 0;
+    getUint8ArrayMemory0().set(arg, ptr / 1);
+    WASM_VECTOR_LEN = arg.length;
+    return ptr;
+}
+
+function takeFromExternrefTable0(idx) {
+    const value = wasm.__wbindgen_externrefs.get(idx);
+    wasm.__externref_table_dealloc(idx);
+    return value;
+}
+
+const MessageFinalization = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(ptr => wasm.__wbg_message_free(ptr >>> 0, 1));
+/**
+ * A chat message with role and content
+ */
+export class Message {
+
+    __destroy_into_raw() {
+        const ptr = this.__wbg_ptr;
+        this.__wbg_ptr = 0;
+        MessageFinalization.unregister(this);
+        return ptr;
+    }
+
+    free() {
+        const ptr = this.__destroy_into_raw();
+        wasm.__wbg_message_free(ptr, 0);
+    }
+    /**
+     * Create a new message with the given role and content
+     * @param {string} role
+     * @param {string} content
+     */
+    constructor(role, content) {
+        const ptr0 = passStringToWasm0(role, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ptr1 = passStringToWasm0(content, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len1 = WASM_VECTOR_LEN;
+        const ret = wasm.message_new(ptr0, len0, ptr1, len1);
+        this.__wbg_ptr = ret >>> 0;
+        MessageFinalization.register(this, this.__wbg_ptr, this);
+        return this;
+    }
+    /**
+     * Get the message role
+     * @returns {string}
+     */
+    get role() {
+        let deferred1_0;
+        let deferred1_1;
+        try {
+            const ret = wasm.message_role(this.__wbg_ptr);
+            deferred1_0 = ret[0];
+            deferred1_1 = ret[1];
+            return getStringFromWasm0(ret[0], ret[1]);
+        } finally {
+            wasm.__wbindgen_free(deferred1_0, deferred1_1, 1);
+        }
+    }
+    /**
+     * Get the message content
+     * @returns {string}
+     */
+    get content() {
+        let deferred1_0;
+        let deferred1_1;
+        try {
+            const ret = wasm.message_content(this.__wbg_ptr);
+            deferred1_0 = ret[0];
+            deferred1_1 = ret[1];
+            return getStringFromWasm0(ret[0], ret[1]);
+        } finally {
+            wasm.__wbindgen_free(deferred1_0, deferred1_1, 1);
+        }
+    }
+}
+if (Symbol.dispose) Message.prototype[Symbol.dispose] = Message.prototype.free;
+
 const ModelFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_model_free(ptr >>> 0, 1));
@@ -230,21 +299,56 @@ export class Model {
         return this;
     }
     /**
-     * @param {string} prompt
+     * Initialize a new conversation with system prompt and options.
+     * This clears the KV cache and starts fresh.
+     * @param {string | null | undefined} system_prompt
+     * @param {boolean} enable_thinking
+     */
+    start_conversation(system_prompt, enable_thinking) {
+        var ptr0 = isLikeNone(system_prompt) ? 0 : passStringToWasm0(system_prompt, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        var len0 = WASM_VECTOR_LEN;
+        wasm.model_start_conversation(this.__wbg_ptr, ptr0, len0, enable_thinking);
+    }
+    /**
+     * Load conversation template from tokenizer_config.json content.
+     * @param {string} tokenizer_config_json
+     * @param {string | null | undefined} system_prompt
+     * @param {boolean} enable_thinking
+     */
+    start_conversation_from_config(tokenizer_config_json, system_prompt, enable_thinking) {
+        const ptr0 = passStringToWasm0(tokenizer_config_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        var ptr1 = isLikeNone(system_prompt) ? 0 : passStringToWasm0(system_prompt, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        var len1 = WASM_VECTOR_LEN;
+        const ret = wasm.model_start_conversation_from_config(this.__wbg_ptr, ptr0, len0, ptr1, len1, enable_thinking);
+        if (ret[1]) {
+            throw takeFromExternrefTable0(ret[0]);
+        }
+    }
+    /**
+     * Send a user message and prepare for generation.
+     *
+     * This method efficiently reuses the KV cache by only tokenizing NEW content:
+     * - First turn: tokenizes full prompt (system + user + assistant start)
+     * - Subsequent turns: tokenizes only the continuation (close prev + new user + assistant start)
+     *
+     * The `enable_thinking` parameter controls whether this specific message should use thinking mode.
+     * @param {string} user_message
      * @param {number} temp
      * @param {number} top_p
      * @param {number} repeat_penalty
      * @param {number} repeat_last_n
      * @param {number} seed
+     * @param {boolean} enable_thinking
      * @returns {string}
      */
-    init_with_prompt(prompt, temp, top_p, repeat_penalty, repeat_last_n, seed) {
+    chat(user_message, temp, top_p, repeat_penalty, repeat_last_n, seed, enable_thinking) {
         let deferred3_0;
         let deferred3_1;
         try {
-            const ptr0 = passStringToWasm0(prompt, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+            const ptr0 = passStringToWasm0(user_message, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
             const len0 = WASM_VECTOR_LEN;
-            const ret = wasm.model_init_with_prompt(this.__wbg_ptr, ptr0, len0, temp, top_p, repeat_penalty, repeat_last_n, seed);
+            const ret = wasm.model_chat(this.__wbg_ptr, ptr0, len0, temp, top_p, repeat_penalty, repeat_last_n, seed, enable_thinking);
             var ptr2 = ret[0];
             var len2 = ret[1];
             if (ret[3]) {
@@ -259,6 +363,53 @@ export class Model {
         }
     }
     /**
+     * Complete the current turn and record the assistant response.
+     * The generated tokens remain in the KV cache for the next turn.
+     */
+    end_turn() {
+        wasm.model_end_turn(this.__wbg_ptr);
+    }
+    /**
+     * Clear conversation history but keep system prompt.
+     * Also clears KV cache since we're starting fresh.
+     */
+    clear_conversation() {
+        wasm.model_clear_conversation(this.__wbg_ptr);
+    }
+    /**
+     * Get conversation history as JSON.
+     * @returns {string}
+     */
+    get_conversation_json() {
+        let deferred1_0;
+        let deferred1_1;
+        try {
+            const ret = wasm.model_get_conversation_json(this.__wbg_ptr);
+            deferred1_0 = ret[0];
+            deferred1_1 = ret[1];
+            return getStringFromWasm0(ret[0], ret[1]);
+        } finally {
+            wasm.__wbindgen_free(deferred1_0, deferred1_1, 1);
+        }
+    }
+    /**
+     * Get number of messages in conversation.
+     * @returns {number}
+     */
+    get_message_count() {
+        const ret = wasm.model_get_message_count(this.__wbg_ptr);
+        return ret >>> 0;
+    }
+    /**
+     * Get number of tokens currently in KV cache.
+     * @returns {number}
+     */
+    get_cached_token_count() {
+        const ret = wasm.model_get_cached_token_count(this.__wbg_ptr);
+        return ret >>> 0;
+    }
+    /**
+     * Generate the next token.
      * @returns {string}
      */
     next_token() {
@@ -280,6 +431,7 @@ export class Model {
         }
     }
     /**
+     * Check if the last generated token was EOS.
      * @returns {boolean}
      */
     is_eos() {
@@ -287,16 +439,15 @@ export class Model {
         return ret !== 0;
     }
     /**
+     * Get total token count in KV cache.
      * @returns {number}
      */
     get_token_count() {
-        const ret = wasm.model_get_token_count(this.__wbg_ptr);
+        const ret = wasm.model_get_cached_token_count(this.__wbg_ptr);
         return ret >>> 0;
     }
-    reset() {
-        wasm.model_reset(this.__wbg_ptr);
-    }
     /**
+     * Generate multiple tokens at once.
      * @param {number} count
      * @returns {string}
      */
@@ -316,6 +467,43 @@ export class Model {
             return getStringFromWasm0(ptr1, len1);
         } finally {
             wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
+        }
+    }
+    /**
+     * Reset the model completely (clears KV cache and all state).
+     */
+    reset() {
+        wasm.model_reset(this.__wbg_ptr);
+    }
+    /**
+     * Legacy single-turn API. Use `chat()` for multi-turn conversations.
+     * @param {string} prompt
+     * @param {number} temp
+     * @param {number} top_p
+     * @param {number} repeat_penalty
+     * @param {number} repeat_last_n
+     * @param {number} seed
+     * @param {boolean} enable_thinking
+     * @returns {string}
+     */
+    init_with_prompt(prompt, temp, top_p, repeat_penalty, repeat_last_n, seed, enable_thinking) {
+        let deferred3_0;
+        let deferred3_1;
+        try {
+            const ptr0 = passStringToWasm0(prompt, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+            const len0 = WASM_VECTOR_LEN;
+            const ret = wasm.model_init_with_prompt(this.__wbg_ptr, ptr0, len0, temp, top_p, repeat_penalty, repeat_last_n, seed, enable_thinking);
+            var ptr2 = ret[0];
+            var len2 = ret[1];
+            if (ret[3]) {
+                ptr2 = 0; len2 = 0;
+                throw takeFromExternrefTable0(ret[2]);
+            }
+            deferred3_0 = ptr2;
+            deferred3_1 = len2;
+            return getStringFromWasm0(ptr2, len2);
+        } finally {
+            wasm.__wbindgen_free(deferred3_0, deferred3_1, 1);
         }
     }
 }

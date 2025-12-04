@@ -6,9 +6,6 @@ edition = "2021"
 [lib]
 crate-type = ["cdylib"]
 
-[features]
-default = []
-
 [dependencies]
 # IC dependencies
 candid = "0.10.20"
@@ -35,6 +32,11 @@ tokenizers = { version = "0.22", default-features = false, features = ["fancy-re
 
 # Utilities
 anyhow = "1.0"
+canbench-rs = { version = "0.2", optional = true }
+
+[features]
+default = []
+canbench-rs = ["dep:canbench-rs"]
 
 [profile.release]
 opt-level = "z"

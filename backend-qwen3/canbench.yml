@@ -1,0 +1,6 @@
+build_cmd: cargo build --release --target wasm32-unknown-unknown -p qwen3_backend --features canbench-rs
+
+wasm_path: ./target/wasm32-unknown-unknown/release/qwen3_backend.wasm
+
+stable_memory:
+  file: /home/jesse/.cache/huggingface/hub/models--unsloth--Qwen3-0.6B-GGUF/blobs/e150ed544dfe6016930c026a93913a5e3184181ebfe6ab2223ae01dd0491784c

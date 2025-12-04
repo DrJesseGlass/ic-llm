@@ -42,6 +42,9 @@ canbench-rs = { version = "0.4", optional = true }
 default = []
 canbench-rs = ["dep:canbench-rs"]
 
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(feature, values("telemetry"))'] }
+
 [profile.release]
 opt-level = "z"
 lto = true

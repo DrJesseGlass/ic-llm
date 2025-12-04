@@ -5,7 +5,7 @@ members = [
 resolver = "2"
 
 [patch.crates-io]
-getrandom = { git = "https://github.com/DrJesseGlass/getrandom", tag = "v0.3.0-determinism.2" }
+getrandom = { git = "https://github.com/DrJesseGlass/getrandom", tag = "v0.3.0-determinism.3" }
 
 [profile.release]
 opt-level = "z"

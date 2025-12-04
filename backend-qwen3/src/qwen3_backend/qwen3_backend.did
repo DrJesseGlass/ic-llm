@@ -1,2 +1,61 @@
+type GenerationConfig = record {
+  temperature : float64;
+  top_p : float64;
+  top_k : opt nat32;
+  repeat_penalty : float32;
+  repeat_last_n : nat64;
+  seed : nat64;
+  max_tokens : nat64;
+};
+
+type ModelMetadata = record {
+  name : text;
+  version : text;
+  architecture : text;
+  parameters : nat64;
+  context_length : opt nat64;
+};
+
+type EmptyResult = variant { Ok; Err : text };
+
+type InferenceRequest = record {
+  prompt : text;
+  config : opt GenerationConfig;
+};
+
+type InferenceResponse = record {
+  generated_text : text;
+  tokens_generated : nat64;
+  instructions_used : nat64;
+  success : bool;
+  error : opt text;
+};
+
+type ModelInfo = record {
+  loaded : bool;
+  current_tokens : nat64;
+  metadata : opt ModelMetadata;
+};
+
 service : {
+  setup_model : () -> (EmptyResult);
+  generate : (InferenceRequest) -> (InferenceResponse);
+  reset_generation : () -> (EmptyResult);
+  is_model_loaded : () -> (bool) query;
+  get_model_info : () -> (ModelInfo) query;
+
+  append_chunk : (blob) -> (nat64);
+  buffer_size : () -> (nat64) query;
+  clear_buffer : () -> ();
+  append_parallel_chunk : (nat32, blob) -> (nat64);
+  parallel_chunks_complete : (nat32) -> (bool) query;
+  missing_chunks : (nat32) -> (vec nat32) query;
+  clear_parallel_chunks : () -> ();
+  parallel_chunk_count : () -> (nat64) query;
+  save_buffer_to_storage : (text) -> (variant { Ok : text; Err : text });
+  save_parallel_to_storage : (text) -> (variant { Ok : text; Err : text });
+  storage_key_exists : (text) -> (bool) query;
+  get_storage_size : (text) -> (opt nat64) query;
+  delete_storage_key : (text) -> (variant { Ok : text; Err : text });
+  get_storage_status : () -> (text) query;
 }

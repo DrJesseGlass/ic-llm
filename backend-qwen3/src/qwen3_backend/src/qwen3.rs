@@ -73,6 +73,7 @@ impl CandleModel for Qwen3Model {
 
     fn reset(&mut self) {
         self.tokens.clear();
+        self.model.clear_kv_cache();
     }
 }
 

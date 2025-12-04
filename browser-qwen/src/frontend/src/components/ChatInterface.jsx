@@ -8,31 +8,25 @@ function parseResponse(fullText, enableThinking) {
     const lastThinkStart = fullText.lastIndexOf('<think>');
     const lastThinkEnd = fullText.lastIndexOf('</think>');
 
-    // If last <think> comes after last </think>, we're still in thinking mode
     if (lastThinkStart > lastThinkEnd) {
-      // Currently inside a <think> block - everything is thinking
       return {
         thinking: cleanTokens(fullText),
         response: ''
       };
     } else if (lastThinkEnd !== -1) {
-      // We have a closed </think> and no <think> after it - split here
       const thinkingRaw = fullText.substring(0, lastThinkEnd);
-      const responseRaw = fullText.substring(lastThinkEnd + 8); // Skip '</think>'
-
+      const responseRaw = fullText.substring(lastThinkEnd + 8);
       return {
         thinking: cleanTokens(thinkingRaw),
         response: cleanTokens(responseRaw)
       };
     } else {
-      // No tags yet - still building initial thinking
       return {
         thinking: cleanTokens(fullText),
         response: ''
       };
     }
   } else {
-    // Non-thinking mode: everything is response
     return {
       thinking: '',
       response: cleanTokens(fullText)
@@ -50,94 +44,177 @@ function cleanTokens(text) {
     .trim();
 }
 
-export function ChatInterface() {
-  const { model, loading, error, loadProgress, generate, reset } = useQwenModel();
-
-  const [prompt, setPrompt] = useState('What is the capital of France?');
-  const [maxTokens, setMaxTokens] = useState(100);
-  const [output, setOutput] = useState('');
-  const [thinkingOutput, setThinkingOutput] = useState('');
-  const [generating, setGenerating] = useState(false);
-  const [stats, setStats] = useState(null);
-  const [enableThinking, setEnableThinking] = useState(true);
+// Individual message component
+function Message({ message, isStreaming }) {
   const [showThinking, setShowThinking] = useState(false);
 
+  if (message.role === 'user') {
+    return (
+      <div className="message message-user">
+        <div className="message-content">{message.content}</div>
+      </div>
+    );
+  }
+
+  // Assistant message
+  return (
+    <div className="message message-assistant">
+      {message.thinking && (
+        <div className="thinking-wrapper">
+          <button
+            className="thinking-toggle"
+            onClick={() => setShowThinking(!showThinking)}
+          >
+            <span>{showThinking ? '▼' : '▶'}</span> Reasoning
+          </button>
+          {showThinking && (
+            <div className="thinking-content">{message.thinking}</div>
+          )}
+        </div>
+      )}
+      <div className="message-content">
+        {message.content || (isStreaming && <span className="streaming-cursor">▊</span>)}
+      </div>
+      {isStreaming && <span className="streaming-indicator"></span>}
+    </div>
+  );
+}
+
+export function ChatInterface() {
+  const {
+    model,
+    loading,
+    error,
+    loadProgress,
+    startConversation,
+    chat,
+    clearConversation,
+    getStats,
+    reset
+  } = useQwenModel();
+
+  const [messages, setMessages] = useState([]);
+  const [inputValue, setInputValue] = useState('');
+  const [maxTokens, setMaxTokens] = useState(500);
+  const [generating, setGenerating] = useState(false);
+  const [enableThinking, setEnableThinking] = useState(true);
+  const [stats, setStats] = useState({ messages: 0, cachedTokens: 0, tokensPerSec: 0 });
+  const [conversationStarted, setConversationStarted] = useState(false);
+
   const abortControllerRef = useRef(null);
-  const outputRef = useRef(null);
-  const fullResponseRef = useRef('');
+  const chatThreadRef = useRef(null);
+  const inputRef = useRef(null);
 
-  // Auto-scroll output
+  // Auto-scroll chat thread
   useEffect(() => {
-    if (outputRef.current) {
-      outputRef.current.scrollTop = outputRef.current.scrollHeight;
+    if (chatThreadRef.current) {
+      chatThreadRef.current.scrollTop = chatThreadRef.current.scrollHeight;
     }
-  }, [output]);
+  }, [messages]);
 
-  const handleGenerate = async () => {
-    if (!model || generating) return;
+  // Focus input when ready
+  useEffect(() => {
+    if (!loading && !generating && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [loading, generating]);
 
+  const handleSend = async () => {
+    if (!model || generating || !inputValue.trim()) return;
+
+    const userMessage = inputValue.trim();
+    setInputValue('');
     setGenerating(true);
-    setOutput('');
-    setThinkingOutput('');
-    setStats(null);
-    fullResponseRef.current = '';
 
-    reset();
+    // Start conversation if needed
+    if (!conversationStarted) {
+      startConversation(null, enableThinking);
+      setConversationStarted(true);
+    }
+
+    // Add user message to UI
+    const userMsg = { role: 'user', content: userMessage };
+    setMessages(prev => [...prev, userMsg]);
+
+    // Add placeholder for assistant response
+    const assistantMsgId = Date.now();
+    setMessages(prev => [...prev, {
+      id: assistantMsgId,
+      role: 'assistant',
+      content: '',
+      thinking: '',
+      isStreaming: true
+    }]);
 
     abortControllerRef.current = new AbortController();
     const startTime = Date.now();
     let tokenCount = 0;
+    let fullResponse = '';
 
     try {
-
-      await generate(prompt, {
+      await chat(userMessage, {
         maxTokens,
         enableThinking,
-        temperature: 0.0, //0.7,
-        topP: 0.0, //0.9,
+        temperature: 0.6,
+        topP: 0.9,
         repeatPenalty: 1.1,
         repeatLastN: 64,
-        seed: 42, //Date.now(),
+        seed: Date.now(),
         onToken: (token, count) => {
-          fullResponseRef.current += token;
+          fullResponse += token;
           tokenCount = count;
 
-          const fullText = fullResponseRef.current;
+          const { thinking, response } = parseResponse(fullResponse, enableThinking);
 
-          const { thinking, response } = parseResponse(fullText, enableThinking);
-
-          setThinkingOutput(thinking);
-          setOutput(response);
+          // Update the assistant message
+          setMessages(prev => prev.map(msg =>
+            msg.id === assistantMsgId
+              ? { ...msg, content: response, thinking, isStreaming: true }
+              : msg
+          ));
 
           // Update stats every 10 tokens
           if (count % 10 === 0) {
             const elapsed = (Date.now() - startTime) / 1000;
-            const tokPerSec = (count / elapsed).toFixed(2);
+            const modelStats = getStats();
             setStats({
-              tokens: count,
-              time: elapsed.toFixed(2),
-              speed: tokPerSec
+              ...modelStats,
+              tokensPerSec: (count / elapsed).toFixed(1)
             });
           }
         },
-
         signal: abortControllerRef.current.signal
       });
 
+      // Final update
+      const { thinking, response } = parseResponse(fullResponse, enableThinking);
+      setMessages(prev => prev.map(msg =>
+        msg.id === assistantMsgId
+          ? { ...msg, content: response, thinking, isStreaming: false }
+          : msg
+      ));
+
       // Final stats
-      const totalTime = (Date.now() - startTime) / 1000;
+      const elapsed = (Date.now() - startTime) / 1000;
+      const modelStats = getStats();
       setStats({
-        tokens: tokenCount,
-        time: totalTime.toFixed(2),
-        speed: (tokenCount / totalTime).toFixed(2)
+        ...modelStats,
+        tokensPerSec: (tokenCount / elapsed).toFixed(1)
       });
 
     } catch (err) {
-      console.error('Generation error:', err);
-      setOutput(prev => prev + '\n\n[Error: ' + err.message + ']');
+      if (err.name !== 'AbortError') {
+        console.error('Generation error:', err);
+        setMessages(prev => prev.map(msg =>
+          msg.id === assistantMsgId
+            ? { ...msg, content: `Error: ${err.message}`, isStreaming: false }
+            : msg
+        ));
+      }
     } finally {
       setGenerating(false);
       abortControllerRef.current = null;
+      inputRef.current?.focus();
     }
   };
 
@@ -147,12 +224,21 @@ export function ChatInterface() {
     }
   };
 
-  const handleReset = () => {
-    reset();
-    setOutput('');
-    setThinkingOutput('');
-    setStats(null);
-    fullResponseRef.current = '';
+  const handleNewChat = () => {
+    clearConversation();
+    setMessages([]);
+    setConversationStarted(false);
+    setStats({ messages: 0, cachedTokens: 0, tokensPerSec: 0 });
+    // Restart conversation with current thinking setting
+    startConversation(null, enableThinking);
+    setConversationStarted(true);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
   };
 
   if (loading) {
@@ -189,117 +275,94 @@ export function ChatInterface() {
   return (
     <div className="chat-container">
       <header className="chat-header">
-        <h1>Qwen3-0.6B in Browser</h1>
+        <h1>🤖 Qwen3 Chat</h1>
         <p>Running locally with WebAssembly + SIMD</p>
       </header>
 
       <div className="chat-main">
-        <div className="input-section">
-          <label htmlFor="prompt">Prompt:</label>
-          <input
-            id="prompt"
-            type="text"
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            disabled={generating}
-            placeholder="Ask me anything..."
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !generating) {
-                handleGenerate();
-              }
-            }}
-          />
+        {/* Status Bar */}
+        <div className="status-bar">
+          <span className="status-ready">Ready</span>
+          <span className="cache-info">
+            {stats.messages} messages | {stats.cachedTokens} tokens cached
+            {stats.tokensPerSec > 0 && ` | ${stats.tokensPerSec} tok/s`}
+          </span>
+        </div>
 
-          <div className="controls-row">
-            <div className="control-group">
-              <label htmlFor="maxTokens">Max Tokens:</label>
-              <input
-                id="maxTokens"
-                type="number"
-                min="1"
-                max="500"
-                value={maxTokens}
-                onChange={(e) => setMaxTokens(parseInt(e.target.value) || 100)}
-                disabled={generating}
-              />
+        {/* Chat Thread */}
+        <div className="chat-thread" ref={chatThreadRef}>
+          {messages.length === 0 ? (
+            <div className="empty-state">
+              <h3>Start a conversation</h3>
+              <p>Type a message below to begin chatting with the model.</p>
             </div>
+          ) : (
+            messages.map((msg, idx) => (
+              <Message
+                key={msg.id || idx}
+                message={msg}
+                isStreaming={msg.isStreaming}
+              />
+            ))
+          )}
+        </div>
 
-            <div className="control-group">
-              <label htmlFor="enableThinking">
+        {/* Input Area */}
+        <div className="input-area">
+          <div className="input-wrapper">
+            <textarea
+              ref={inputRef}
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Type your message... (Enter to send, Shift+Enter for newline)"
+              disabled={generating}
+              rows={1}
+            />
+            <div className="input-options">
+              <label className="checkbox-label">
                 <input
-                  id="enableThinking"
                   type="checkbox"
                   checked={enableThinking}
                   onChange={(e) => setEnableThinking(e.target.checked)}
                   disabled={generating}
                 />
-                Enable Thinking
+                Thinking mode
+              </label>
+              <label className="number-label">
+                Max tokens:
+                <input
+                  type="number"
+                  value={maxTokens}
+                  onChange={(e) => setMaxTokens(parseInt(e.target.value) || 500)}
+                  min="1"
+                  max="2000"
+                  disabled={generating}
+                />
               </label>
             </div>
-
-            <div className="button-group">
-              <button
-                className="btn-primary"
-                onClick={handleGenerate}
-                disabled={generating || !prompt.trim()}
-              >
-                {generating ? 'Generating...' : 'Generate'}
-              </button>
-
-              {generating && (
-                <button
-                  className="btn-stop"
-                  onClick={handleStop}
-                >
-                  Stop
-                </button>
-              )}
-
-              <button
-                className="btn-secondary"
-                onClick={handleReset}
-                disabled={generating}
-              >
-                Reset
-              </button>
-            </div>
           </div>
-
-          {stats && (
-            <div className="stats-bar">
-              <span>📊 {stats.tokens} tokens</span>
-              <span>⏱️ {stats.time}s</span>
-              <span>⚡ {stats.speed} tok/s</span>
-            </div>
-          )}
-        </div>
-
-        {/* Thinking Section (collapsible) */}
-        {thinkingOutput && (
-          <div className="thinking-section">
+          <div className="button-group">
             <button
-              className="thinking-toggle"
-              onClick={() => setShowThinking(!showThinking)}
+              className="btn-primary"
+              onClick={handleSend}
+              disabled={generating || !inputValue.trim()}
             >
-              {showThinking ? '▼' : '▶'} Reasoning Process
+              Send
             </button>
-            {showThinking && (
-              <div className="thinking-output">
-                {thinkingOutput}
-              </div>
+            {generating && (
+              <button className="btn-stop" onClick={handleStop}>
+                Stop
+              </button>
             )}
           </div>
-        )}
+        </div>
 
-        {/* Main Response Section */}
-        <div className="output-section">
-          <label>Response:</label>
-          <div
-            ref={outputRef}
-            className="output-box"
-          >
-            {output || <span className="placeholder">Generated text will appear here...</span>}
-          </div>
+        {/* Footer Tools */}
+        <div className="footer-tools">
+          <button className="btn-secondary" onClick={handleNewChat}>
+            New Chat
+          </button>
         </div>
       </div>
 

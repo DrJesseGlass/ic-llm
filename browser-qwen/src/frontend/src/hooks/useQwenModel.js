@@ -138,26 +138,33 @@ export function useQwenModel() {
     };
   }, []);
 
-  const generate = useCallback(async (prompt, options = {}) => {
+  // Start a new conversation
+  const startConversation = useCallback((systemPrompt = null, enableThinking = true) => {
+    if (!model) return;
+    model.start_conversation(systemPrompt, enableThinking);
+  }, [model]);
+
+  // Send a message in the conversation (multi-turn with KV cache reuse)
+  const chat = useCallback(async (message, options = {}) => {
     if (!model) throw new Error('Model not loaded');
 
     const {
-      maxTokens = 100,
-      temperature = 0.0, //0.7,
-      topP = 0.0, //0.9,
+      maxTokens = 500,
+      temperature = 0.6,
+      topP = 0.9,
       repeatPenalty = 1.1,
       repeatLastN = 64,
-      seed = 42, //Date.now(),
+      seed = Date.now(),
       enableThinking = true,
       onToken = () => {},
       signal = null
     } = options;
 
-    let fullText = prompt;
+    let fullResponse = '';
 
-    // Initialize with prompt
-    const firstToken = model.init_with_prompt(
-      prompt,
+    // Start chat turn - uses KV cache efficiently!
+    const firstToken = model.chat(
+      message,
       temperature,
       topP,
       repeatPenalty,
@@ -166,10 +173,10 @@ export function useQwenModel() {
       enableThinking
     );
 
-    fullText += firstToken;
+    fullResponse += firstToken;
     onToken(firstToken, 1);
 
-    // Generate tokens
+    // Generate remaining tokens
     for (let i = 1; i < maxTokens; i++) {
       if (signal?.aborted) break;
       if (model.is_eos()) break;
@@ -181,7 +188,7 @@ export function useQwenModel() {
         break;
       }
 
-      fullText += token;
+      fullResponse += token;
       onToken(token, i + 1);
 
       // Yield to event loop every 10 tokens
@@ -190,13 +197,39 @@ export function useQwenModel() {
       }
     }
 
-    return fullText;
+    // End the turn - records response in conversation history, keeps KV cache
+    model.end_turn();
+
+    return fullResponse;
   }, [model]);
 
+  // Clear conversation but keep system prompt
+  const clearConversation = useCallback(() => {
+    if (model) {
+      model.clear_conversation();
+    }
+  }, [model]);
+
+  // Full reset (alias for clearConversation for compatibility)
   const reset = useCallback(() => {
     if (model) {
       model.reset();
     }
+  }, [model]);
+
+  // Get conversation stats
+  const getStats = useCallback(() => {
+    if (!model) return { messages: 0, cachedTokens: 0 };
+    return {
+      messages: model.get_message_count(),
+      cachedTokens: model.get_cached_token_count()
+    };
+  }, [model]);
+
+  // Get conversation history as JSON
+  const getConversationJson = useCallback(() => {
+    if (!model) return '[]';
+    return model.get_conversation_json();
   }, [model]);
 
   return {
@@ -204,7 +237,11 @@ export function useQwenModel() {
     loading,
     error,
     loadProgress,
-    generate,
-    reset
+    startConversation,
+    chat,
+    clearConversation,
+    reset,
+    getStats,
+    getConversationJson
   };
 }

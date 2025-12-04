@@ -8,6 +8,9 @@ use ic_dev_kit_rs::model_server::ModelServer;
 mod qwen3;
 use qwen3::Qwen3Model;
 
+#[cfg(feature = "canbench-rs")]
+mod canbench_benchmarks;
+
 type Memory = VirtualMemory<DefaultMemoryImpl>;
 
 thread_local! {

@@ -12,12 +12,12 @@ from pathlib import Path
 # HuggingFace cache locations (same as your serve.py)
 HOME = Path.home()
 
-# GGUF model from unsloth
-GGUF_BASE = HOME / '.cache/huggingface/hub/models--unsloth--Qwen3-0.6B-GGUF'
+# all-Q4_K GGUF (F16-sourced, tied lm_head on the Q4_K path)
+GGUF_BASE = HOME / '.cache/huggingface/hub/models--DrJesseGlass--Qwen3-0.6B-Q4_K'
 gguf_snapshots = list((GGUF_BASE / 'snapshots').glob('*'))
 if not gguf_snapshots:
     print(f"Error: No snapshots found in {GGUF_BASE / 'snapshots'}", file=sys.stderr)
-    print("Run: huggingface-cli download unsloth/Qwen3-0.6B-GGUF Qwen3-0.6B-Q8_0.gguf")
+    print("Run: huggingface-cli download DrJesseGlass/Qwen3-0.6B-Q4_K Qwen3-0.6B-allq4k-f16src.gguf")
     sys.exit(1)
 GGUF_SNAPSHOT = gguf_snapshots[0]
 
@@ -31,8 +31,7 @@ if not qwen_snapshots:
 QWEN_SNAPSHOT = qwen_snapshots[0]
 
 # Choose model file
-GGUF_FILE = 'Qwen3-0.6B-Q8_0.gguf'  # ~600MB
-# GGUF_FILE = 'Qwen3-0.6B-Q4_K_M.gguf'  # ~400MB, faster upload
+GGUF_FILE = 'Qwen3-0.6B-allq4k-f16src.gguf'  # ~326MB, all-Q4_K
 
 WEIGHTS_PATH = GGUF_SNAPSHOT / GGUF_FILE
 TOKENIZER_PATH = QWEN_SNAPSHOT / 'tokenizer.json'

@@ -3,4 +3,8 @@ build_cmd: cargo build --release --target wasm32-unknown-unknown -p qwen3_backen
 wasm_path: ./target/wasm32-unknown-unknown/release/qwen3_backend.wasm
 
 stable_memory:
-  file: /home/jesse/.cache/huggingface/hub/models--unsloth--Qwen3-0.6B-GGUF/blobs/e150ed544dfe6016930c026a93913a5e3184181ebfe6ab2223ae01dd0491784c
+  # Raw all-Q4_K GGUF (341,455,328 bytes) loaded at offset 0; must match MODEL_SIZE
+  # in canbench_benchmarks.rs. Large + gitignored, so download before benchmarking:
+  #   huggingface-cli download DrJesseGlass/Qwen3-0.6B-Q4_K Qwen3-0.6B-allq4k-f16src.gguf \
+  #     --local-dir src/qwen3_backend/benchmark-assets
+  file: ./src/qwen3_backend/benchmark-assets/Qwen3-0.6B-allq4k-f16src.gguf

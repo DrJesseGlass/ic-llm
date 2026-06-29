@@ -32,10 +32,11 @@ dist/
 *.gguf
 **/tokenizer.json
 
-# WASM build artifacts (generated from Candle)
-src/frontend/assets/wasm/*.wasm
-src/frontend/assets/wasm/*.js
-src/frontend/public/assets/wasm/
+# WASM build artifacts, built in the candle fork and copied into public/assets/wasm/.
+# **/ anchoring is needed to match under browser-qwen/.
+**/assets/wasm/*.wasm
+**/assets/wasm/*.js
+**/assets/wasm/snippets/
 
 # Logs
 *.log

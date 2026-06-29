@@ -5,7 +5,14 @@ members = [
 resolver = "2"
 
 [patch.crates-io]
-getrandom = { git = "https://github.com/DrJesseGlass/getrandom", tag = "v0.3.0-determinism.3" }
+getrandom = { git = "https://github.com/DrJesseGlass/getrandom", tag = "determinism-0.3.0.4" }
+
+# Unify backend and ic-dev-kit-rs (both want crates.io candle ^0.11) onto the
+# fork: lazy quantized embedding, wasm32 serial matmul, smaller-footprint loader.
+# Branch is versioned 0.11.0. relaxed-simd is cfg-gated off for the IC build.
+candle-core = { git = "https://github.com/DrJesseGlass/candle", branch = "smaller-wasm-footprint" }
+candle-nn = { git = "https://github.com/DrJesseGlass/candle", branch = "smaller-wasm-footprint" }
+candle-transformers = { git = "https://github.com/DrJesseGlass/candle", branch = "smaller-wasm-footprint" }
 
 [profile.release]
 opt-level = "z"

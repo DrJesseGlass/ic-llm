@@ -28,14 +28,17 @@ export function useQwenModel() {
         const weightsPromise = fetch('/assets/wasm/Qwen3-0.6B-allq4k-f16src.gguf');
         const tokenizerPromise = fetch('/assets/wasm/tokenizer.json');
 
-        // Init the wasm. NOTE: we intentionally do NOT call initThreadPool — batch-1
-        // decode is memory-bound and the per-token matmuls are tiny, so spreading them
-        // across rayon workers costs more in dispatch/sync than it saves (8 threads
-        // measured slower than 1). This matches serve.py's example, which runs
-        // single-threaded relaxed-simd. (Threads help prefill, not decode tok/s.)
-        const { default: init, ModelLoader } =
+        // Init the wasm + rayon pool (all cores). NOTE: earlier threaded numbers were
+        // measured with DevTools open, which ~halves throughput; remeasure console-shut.
+        const { default: init, Model, initThreadPool } =
           await import(/* @vite-ignore */ WASM_MODULE_URL);
         await init();
+        if (globalThis.crossOriginIsolated) {
+          const threads = Math.max(1, Math.min(MAX_WORKER_THREADS, navigator.hardwareConcurrency || MAX_WORKER_THREADS));
+          await initThreadPool(threads);
+        } else {
+          console.warn('Not cross-origin isolated; running single-threaded (check COOP/COEP headers).');
+        }
 
         if (cancelled) return;
         setLoadProgress(15);
@@ -56,34 +59,33 @@ export function useQwenModel() {
         console.log('Content-Length:', weightsTotal, 'Has valid length:', hasContentLength);
 
         const weightsReader = weightsResponse.body.getReader();
-        const loader = new ModelLoader();
+        const chunks = [];
         let weightsLoaded = 0;
         const EXPECTED_SIZE = 326 * 1024 * 1024; // ~326MB (all-Q4_K)
 
-        // Stream each chunk straight into the wasm loader, which quantizes tensors
-        // in file order and frees consumed bytes. The whole file is never held in
-        // JS or wasm at once, roughly halving peak memory vs the all-at-once load.
+        // TEST: buffer the full gguf and use new Model(...) — the exact path serve.py's
+        // example takes (33 tok/s). Isolates whether ModelLoader.finish()'s repack was
+        // routing Q4_K to a non-relaxed matmul. (Gives back the streaming peak-memory win.)
         while (true) {
           const { done, value } = await weightsReader.read();
           if (done) break;
-
-          loader.push(value);
+          chunks.push(value);
           weightsLoaded += value.length;
 
           const total = hasContentLength ? weightsTotal : EXPECTED_SIZE;
           const pct = 15 + (weightsLoaded / total) * 80;
           setLoadProgress(hasContentLength ? pct : Math.min(95, pct));
-
-          if (weightsLoaded % (50 * 1024 * 1024) < value.length) {
-            console.log(`Streamed: ${(weightsLoaded / (1024 * 1024)).toFixed(1)}MB`);
-          }
-          // Yield to the event loop every 10MB to keep the UI responsive.
           if (weightsLoaded % (10 * 1024 * 1024) < value.length) {
             await new Promise(resolve => setTimeout(resolve, 0));
           }
         }
 
-        console.log(`Total streamed: ${(weightsLoaded / (1024 * 1024)).toFixed(1)}MB`);
+        // Concatenate streamed chunks into one buffer for new Model(...).
+        const weightsBuf = new Uint8Array(weightsLoaded);
+        let offset = 0;
+        for (const c of chunks) { weightsBuf.set(c, offset); offset += c.length; }
+        chunks.length = 0;
+
         if (cancelled) return;
         setLoadProgress(96);
 
@@ -95,7 +97,8 @@ export function useQwenModel() {
         if (cancelled) return;
         setLoadProgress(98);
 
-        const modelInstance = loader.finish(tokenizer);
+        // _config is unused in the binding (see .d.ts: constructor(weights, tokenizer, _config)).
+        const modelInstance = new Model(weightsBuf, tokenizer, new Uint8Array());
 
         if (cancelled) {
           modelInstance.reset();

@@ -28,9 +28,9 @@ export function useQwenModel() {
         const weightsPromise = fetch('/assets/wasm/Qwen3-0.6B-allq4k-f16src.gguf');
         const tokenizerPromise = fetch('/assets/wasm/tokenizer.json');
 
-        // Init the wasm + rayon pool (all cores). NOTE: earlier threaded numbers were
-        // measured with DevTools open, which ~halves throughput; remeasure console-shut.
-        const { default: init, Model, initThreadPool } =
+        // Init the wasm + rayon pool (all cores). Threads need cross-origin isolation
+        // (SharedArrayBuffer); without it we fall back to single-threaded.
+        const { default: init, ModelLoader, initThreadPool } =
           await import(/* @vite-ignore */ WASM_MODULE_URL);
         await init();
         if (globalThis.crossOriginIsolated) {
@@ -43,48 +43,36 @@ export function useQwenModel() {
         if (cancelled) return;
         setLoadProgress(15);
 
-        // Fetch weights with fallback progress (chunked transfer)
+        // Fetch weights with fallback progress (chunked transfer).
         const weightsResponse = await weightsPromise;
         if (!weightsResponse.ok) throw new Error('Failed to load model weights');
-
-        // DEBUG: Log all response headers
-        console.log('Response headers:');
-        for (let [key, value] of weightsResponse.headers.entries()) {
-          console.log(`  ${key}: ${value}`);
-        }
 
         const weightsTotal = parseInt(weightsResponse.headers.get('content-length'));
         const hasContentLength = weightsTotal && weightsTotal > 1;
 
-        console.log('Content-Length:', weightsTotal, 'Has valid length:', hasContentLength);
-
         const weightsReader = weightsResponse.body.getReader();
-        const chunks = [];
+        const loader = new ModelLoader();
         let weightsLoaded = 0;
         const EXPECTED_SIZE = 326 * 1024 * 1024; // ~326MB (all-Q4_K)
 
-        // TEST: buffer the full gguf and use new Model(...) — the exact path serve.py's
-        // example takes (33 tok/s). Isolates whether ModelLoader.finish()'s repack was
-        // routing Q4_K to a non-relaxed matmul. (Gives back the streaming peak-memory win.)
+        // Stream each chunk straight into the wasm loader, which quantizes tensors
+        // in file order and frees consumed bytes. The whole file is never held in
+        // JS or wasm at once, roughly halving peak memory vs the all-at-once load.
         while (true) {
           const { done, value } = await weightsReader.read();
           if (done) break;
-          chunks.push(value);
+
+          loader.push(value);
           weightsLoaded += value.length;
 
           const total = hasContentLength ? weightsTotal : EXPECTED_SIZE;
           const pct = 15 + (weightsLoaded / total) * 80;
           setLoadProgress(hasContentLength ? pct : Math.min(95, pct));
+          // Yield to the event loop every 10MB to keep the UI responsive.
           if (weightsLoaded % (10 * 1024 * 1024) < value.length) {
             await new Promise(resolve => setTimeout(resolve, 0));
           }
         }
-
-        // Concatenate streamed chunks into one buffer for new Model(...).
-        const weightsBuf = new Uint8Array(weightsLoaded);
-        let offset = 0;
-        for (const c of chunks) { weightsBuf.set(c, offset); offset += c.length; }
-        chunks.length = 0;
 
         if (cancelled) return;
         setLoadProgress(96);
@@ -97,8 +85,7 @@ export function useQwenModel() {
         if (cancelled) return;
         setLoadProgress(98);
 
-        // _config is unused in the binding (see .d.ts: constructor(weights, tokenizer, _config)).
-        const modelInstance = new Model(weightsBuf, tokenizer, new Uint8Array());
+        const modelInstance = loader.finish(tokenizer);
 
         if (cancelled) {
           modelInstance.reset();

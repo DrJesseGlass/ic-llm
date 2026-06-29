@@ -65,13 +65,42 @@
 }
 
 .chat-header h1 {
-  font-size: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
   margin-bottom: 8px;
-  color: #333;
+  color: #fff;
+}
+
+.brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  background: #fff;
+  color: #667eea;
+  font-size: 22px;
+  font-weight: 800;
+  box-shadow: 0 4px 14px rgba(38, 20, 80, 0.25);
+}
+
+.brand-name {
+  line-height: 1;
+}
+
+.brand-accent {
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .chat-header p {
-  color: #666;
+  color: rgba(255, 255, 255, 0.75);
   font-size: 14px;
 }
 
@@ -373,7 +402,7 @@ button:disabled {
   text-align: center;
   margin-top: 20px;
   padding-top: 16px;
-  color: #666;
+  color: rgba(255, 255, 255, 0.7);
   font-size: 13px;
 }
 

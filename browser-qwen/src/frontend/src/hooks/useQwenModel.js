@@ -4,8 +4,9 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 // and the rayon worker resolves its snippets there. @vite-ignore prevents bundling.
 const WASM_MODULE_URL = '/assets/wasm/candle_wasm_example_quant_qwen3.js';
 
-// Cap the rayon pool; 4 balances decode throughput against per-thread wasm memory.
-const MAX_WORKER_THREADS = 4;
+// Use all logical cores by default; cap only to avoid pathological oversubscription
+// on very-high-core hosts (the model is small, so returns flatten past ~8 threads).
+const MAX_WORKER_THREADS = 16;
 
 export function useQwenModel() {
   const [model, setModel] = useState(null);
@@ -27,16 +28,14 @@ export function useQwenModel() {
         const weightsPromise = fetch('/assets/wasm/Qwen3-0.6B-allq4k-f16src.gguf');
         const tokenizerPromise = fetch('/assets/wasm/tokenizer.json');
 
-        // Init wasm, then the rayon pool; single-threaded if not cross-origin isolated.
-        const { default: init, ModelLoader, initThreadPool } =
+        // Init the wasm. NOTE: we intentionally do NOT call initThreadPool — batch-1
+        // decode is memory-bound and the per-token matmuls are tiny, so spreading them
+        // across rayon workers costs more in dispatch/sync than it saves (8 threads
+        // measured slower than 1). This matches serve.py's example, which runs
+        // single-threaded relaxed-simd. (Threads help prefill, not decode tok/s.)
+        const { default: init, ModelLoader } =
           await import(/* @vite-ignore */ WASM_MODULE_URL);
         await init();
-        if (globalThis.crossOriginIsolated) {
-          const threads = Math.max(1, Math.min(MAX_WORKER_THREADS, navigator.hardwareConcurrency || MAX_WORKER_THREADS));
-          await initThreadPool(threads);
-        } else {
-          console.warn('Not cross-origin isolated; running single-threaded (check COOP/COEP headers).');
-        }
 
         if (cancelled) return;
         setLoadProgress(15);

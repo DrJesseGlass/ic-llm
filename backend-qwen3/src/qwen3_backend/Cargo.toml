@@ -7,13 +7,13 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
-# IC dependencies — versions track ic-dev-kit-rs v0.1.0 (ic-cdk 0.20, candid 0.10.31)
+# Track ic-dev-kit-rs v0.1.0: ic-cdk 0.20, candid 0.10.31
 candid = "0.10.31"
 ic-cdk = "0.20"
 ic-stable-structures = "0.7.2"
 serde = { version = "1.0", features = ["derive"] }
 
-# Dev kit — pinned to the published v0.1.0 tag (ic-cdk 0.20, candle 0.11)
+# Dev kit, pinned to tag v0.1.0
 ic-dev-kit-rs = { git = "https://github.com/DrJesseGlass/ic-dev-kit-rs", tag = "v0.1.0", features = ["text-generation", "storage", "candle", "telemetry"] }
 #ic-dev-kit-rs = { path = "../../../../ic-dev-kit-rs", features = ["text-generation", "storage", "candle", "telemetry"] }
 
@@ -26,9 +26,7 @@ ic-dev-kit-rs = { git = "https://github.com/DrJesseGlass/ic-dev-kit-rs", tag = "
 #candle-nn = { git = "https://github.com/huggingface/candle", tag = "0.9.2-alpha.1", default-features = false }
 #candle-transformers = { git = "https://github.com/huggingface/candle", tag = "0.9.2-alpha.1", default-features = false }
 #qwen3 reset cache after tag = "0.9.2-alpha.1"
-# crates.io candle 0.11 — same source ic-dev-kit-rs v0.1.0 uses. The workspace
-# [patch.crates-io] redirects these to the DrJesseGlass/candle smaller-wasm-footprint
-# fork (also 0.11), so both consumers unify on a single candle-core.
+# crates.io candle 0.11; workspace [patch.crates-io] redirects to the fork.
 candle-core = { version = "0.11", default-features = false }
 candle-nn = { version = "0.11", default-features = false }
 candle-transformers = { version = "0.11", default-features = false }

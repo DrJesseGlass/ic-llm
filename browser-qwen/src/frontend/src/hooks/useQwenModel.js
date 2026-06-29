@@ -1,9 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 
-// Load the vendored pkg from the static asset path rather than a bundled import,
-// so its import.meta.url anchors at /assets/wasm/. The rayon worker glue resolves
-// its snippets relative to that; if vite bundles the pkg the worker URL ends up at
-// /assets/snippets/ and 404s. @vite-ignore keeps vite from rewriting it.
+// Static path (not a bundled import) so import.meta.url anchors at /assets/wasm/
+// and the rayon worker resolves its snippets there. @vite-ignore prevents bundling.
 const WASM_MODULE_URL = '/assets/wasm/candle_wasm_example_quant_qwen3.js';
 
 export function useQwenModel() {
@@ -20,9 +18,7 @@ export function useQwenModel() {
       try {
         setLoadProgress(5);
 
-        // Load + init the wasm, then spin up the rayon worker pool. Threads need
-        // SharedArrayBuffer (cross-origin isolation); fall back to single thread
-        // if the page isn't isolated.
+        // Init wasm, then the rayon pool; single-threaded if not cross-origin isolated.
         const { default: init, ModelLoader, initThreadPool } =
           await import(/* @vite-ignore */ WASM_MODULE_URL);
         await init();

@@ -55,7 +55,7 @@ cd src/frontend && npm install && cd ../..
 ```bash
 cd src/frontend/public/assets/wasm
 
-# Download model weights (~326MB, all-Q4_K) — must match the filename the hook fetches
+# Download model weights (~326MB, all-Q4_K); filename must match the hook
 wget https://huggingface.co/DrJesseGlass/Qwen3-0.6B-Q4_K/resolve/main/Qwen3-0.6B-allq4k-f16src.gguf
 
 # Download tokenizer (~11MB)
@@ -67,19 +67,17 @@ cd ../../../../
 ### 4. Build WASM Artifacts
 
 > **Not vendored in git.** The `.wasm`, pkg `.js`, and `snippets/` under
-> `assets/wasm/` are `.gitignore`d (they're produced by the candle fork, not by
-> this repo's build), so a fresh clone has none of them — you must rebuild and
-> copy after cloning.
+> `assets/wasm/` are `.gitignore`d (produced by the candle fork), so rebuild and
+> copy them after cloning.
 
-From DrJesseGlass's [Candle Fork](https://github.com/DrJesseGlass/candle/tree/smaller-wasm-footprint) (`smaller-wasm-footprint` branch — multithread + relaxed-simd + lazy-Q4K, plus streaming load + smaller footprint; stacked on `wasm-browser-perf`):
+From DrJesseGlass's [Candle Fork](https://github.com/DrJesseGlass/candle/tree/smaller-wasm-footprint) (`smaller-wasm-footprint` branch: multithread, relaxed-simd, lazy-Q4K, streaming load):
 ```bash
 cd candle/examples/wasm/quant-qwen3
 wasm-pack build --target web --release
 ```
 
-Copy the **entire** generated pkg into `public/assets/wasm/`. The `snippets/`
-directory is the wasm-bindgen-rayon worker glue and is required for the thread
-pool — omitting it makes the worker 404 at runtime:
+Copy the **entire** pkg into `public/assets/wasm/`. `snippets/` is the
+wasm-bindgen-rayon worker glue; omitting it 404s the thread pool at runtime:
 ```bash
 DEST=<path-to-project>/src/frontend/public/assets/wasm
 cp pkg/candle_wasm_example_quant_qwen3_bg.wasm "$DEST"/

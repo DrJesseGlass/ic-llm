@@ -25,7 +25,7 @@ fn ensure_model_loaded() {
         }
 
         let mut model_bytes = vec![0u8; MODEL_SIZE];
-        ic_cdk::api::stable::stable_read(0, &mut model_bytes);
+        ic_cdk::stable::stable_read(0, &mut model_bytes);
 
         let model = Qwen3Model::load(model_bytes, Some(TOKENIZER_BYTES.to_vec()))
             .expect("Failed to load model");
@@ -45,7 +45,7 @@ fn ensure_model_loaded() {
 fn bench_model_load() -> BenchResult {
     bench_fn(|| {
         let mut model_bytes = vec![0u8; MODEL_SIZE];
-        ic_cdk::api::stable::stable_read(0, &mut model_bytes);
+        ic_cdk::stable::stable_read(0, &mut model_bytes);
 
         let _model = Qwen3Model::load(model_bytes, Some(TOKENIZER_BYTES.to_vec()))
             .expect("Failed to load model");

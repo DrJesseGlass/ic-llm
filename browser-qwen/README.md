@@ -71,7 +71,7 @@ cd ../../../../
 > this repo's build), so a fresh clone has none of them — you must rebuild and
 > copy after cloning.
 
-From DrJesseGlass's [Candle Fork](https://github.com/DrJesseGlass/candle/tree/wasm-browser-perf) (`wasm-browser-perf` branch — multithread + relaxed-simd + lazy-Q4K):
+From DrJesseGlass's [Candle Fork](https://github.com/DrJesseGlass/candle/tree/smaller-wasm-footprint) (`smaller-wasm-footprint` branch — multithread + relaxed-simd + lazy-Q4K, plus streaming load + smaller footprint; stacked on `wasm-browser-perf`):
 ```bash
 cd candle/examples/wasm/quant-qwen3
 wasm-pack build --target web --release

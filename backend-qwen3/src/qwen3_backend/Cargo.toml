@@ -27,7 +27,7 @@ ic-dev-kit-rs = { git = "https://github.com/DrJesseGlass/ic-dev-kit-rs", tag = "
 #candle-transformers = { git = "https://github.com/huggingface/candle", tag = "0.9.2-alpha.1", default-features = false }
 #qwen3 reset cache after tag = "0.9.2-alpha.1"
 # crates.io candle 0.11 — same source ic-dev-kit-rs v0.1.0 uses. The workspace
-# [patch.crates-io] redirects these to the DrJesseGlass/candle wasm-browser-perf
+# [patch.crates-io] redirects these to the DrJesseGlass/candle smaller-wasm-footprint
 # fork (also 0.11), so both consumers unify on a single candle-core.
 candle-core = { version = "0.11", default-features = false }
 candle-nn = { version = "0.11", default-features = false }

@@ -1,0 +1,86 @@
+benches:
+  bench_decode_10_tokens:
+    total:
+      calls: 1
+      instructions: 527081
+      heap_increase: 0
+      stable_memory_increase: 0
+    scopes: {}
+  bench_generate_1_token:
+    total:
+      calls: 1
+      instructions: 30954977939
+      heap_increase: 0
+      stable_memory_increase: 0
+    scopes: {}
+  bench_generate_3_tokens:
+    total:
+      calls: 1
+      instructions: 44704818543
+      heap_increase: 0
+      stable_memory_increase: 0
+    scopes: {}
+  bench_generate_5_tokens:
+    total:
+      calls: 1
+      instructions: 58465306563
+      heap_increase: 0
+      stable_memory_increase: 0
+    scopes: {}
+  bench_model_load:
+    total:
+      calls: 1
+      instructions: 9573198385
+      heap_increase: 13199
+      stable_memory_increase: 0
+    scopes: {}
+  bench_prefill_long_200_tokens:
+    total:
+      calls: 1
+      instructions: 1029216726712
+      heap_increase: 0
+      stable_memory_increase: 0
+    scopes: {}
+  bench_prefill_medium_50_tokens:
+    total:
+      calls: 1
+      instructions: 250877417359
+      heap_increase: 0
+      stable_memory_increase: 0
+    scopes: {}
+  bench_prefill_short_4_tokens:
+    total:
+      calls: 1
+      instructions: 11710572878
+      heap_increase: 0
+      stable_memory_increase: 0
+    scopes: {}
+  bench_single_token:
+    total:
+      calls: 1
+      instructions: 30954977939
+      heap_increase: 0
+      stable_memory_increase: 0
+    scopes: {}
+  bench_tokenize_long:
+    total:
+      calls: 1
+      instructions: 101885079
+      heap_increase: 0
+      stable_memory_increase: 0
+    scopes: {}
+  bench_tokenize_medium:
+    total:
+      calls: 1
+      instructions: 51996968
+      heap_increase: 0
+      stable_memory_increase: 0
+    scopes: {}
+  bench_tokenize_short:
+    total:
+      calls: 1
+      instructions: 46494621
+      heap_increase: 0
+      stable_memory_increase: 0
+    scopes: {}
+version: 0.6.0

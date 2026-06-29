@@ -254,7 +254,7 @@ export function ChatInterface() {
         </div>
         <p>{loadProgress.toFixed(0)}% complete</p>
         <p className="loading-hint">
-          First load may take a minute (downloading ~645MB)
+          First load may take a minute (downloading ~326MB)
         </p>
       </div>
     );

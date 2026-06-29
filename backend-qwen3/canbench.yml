@@ -4,5 +4,7 @@ wasm_path: ./target/wasm32-unknown-unknown/release/qwen3_backend.wasm
 
 stable_memory:
   # Raw all-Q4_K GGUF (341,455,328 bytes) loaded at offset 0; must match MODEL_SIZE
-  # in canbench_benchmarks.rs. Content-addressed blob path on the canbench host.
-  file: /home/jesse/.cache/huggingface/hub/models--DrJesseGlass--Qwen3-0.6B-Q4_K/blobs/b1da0fd70967fa812bce682c5385c8f61f63389148f877a927a56b0a56c42fbb
+  # in canbench_benchmarks.rs. Large + gitignored, so download before benchmarking:
+  #   huggingface-cli download DrJesseGlass/Qwen3-0.6B-Q4_K Qwen3-0.6B-allq4k-f16src.gguf \
+  #     --local-dir src/qwen3_backend/benchmark-assets
+  file: ./src/qwen3_backend/benchmark-assets/Qwen3-0.6B-allq4k-f16src.gguf

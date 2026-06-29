@@ -32,10 +32,13 @@ dist/
 *.gguf
 **/tokenizer.json
 
-# WASM build artifacts (generated from Candle)
-src/frontend/assets/wasm/*.wasm
-src/frontend/assets/wasm/*.js
-src/frontend/public/assets/wasm/
+# WASM build artifacts — vendored from the candle fork, not built in this repo.
+# Rebuild in the candle repo (wasm-pack) and copy the pkg into
+# browser-qwen/src/frontend/public/assets/wasm/. The **/ anchoring is required so
+# these match under browser-qwen/ (a root-anchored path like src/frontend/... does not).
+**/assets/wasm/*.wasm
+**/assets/wasm/*.js
+**/assets/wasm/snippets/
 
 # Logs
 *.log

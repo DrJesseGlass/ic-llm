@@ -1,5 +1,10 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import init, { Model } from '../../assets/wasm/candle_wasm_example_quant_qwen3.js';
+
+// Load the vendored pkg from the static asset path rather than a bundled import,
+// so its import.meta.url anchors at /assets/wasm/. The rayon worker glue resolves
+// its snippets relative to that; if vite bundles the pkg the worker URL ends up at
+// /assets/snippets/ and 404s. @vite-ignore keeps vite from rewriting it.
+const WASM_MODULE_URL = '/assets/wasm/candle_wasm_example_quant_qwen3.js';
 
 export function useQwenModel() {
   const [model, setModel] = useState(null);
@@ -15,14 +20,24 @@ export function useQwenModel() {
       try {
         setLoadProgress(5);
 
-        // Initialize WASM
+        // Load + init the wasm, then spin up the rayon worker pool. Threads need
+        // SharedArrayBuffer (cross-origin isolation); fall back to single thread
+        // if the page isn't isolated.
+        const { default: init, ModelLoader, initThreadPool } =
+          await import(/* @vite-ignore */ WASM_MODULE_URL);
         await init();
+        if (globalThis.crossOriginIsolated) {
+          const threads = Math.max(1, Math.min(4, navigator.hardwareConcurrency || 4));
+          await initThreadPool(threads);
+        } else {
+          console.warn('Not cross-origin isolated; running single-threaded (check COOP/COEP headers).');
+        }
 
         if (cancelled) return;
         setLoadProgress(15);
 
         // Fetch weights with fallback progress (chunked transfer)
-        const weightsResponse = await fetch('/assets/wasm/Qwen3-0.6B-Q8_0.gguf');
+        const weightsResponse = await fetch('/assets/wasm/Qwen3-0.6B-allq4k-f16src.gguf');
         if (!weightsResponse.ok) throw new Error('Failed to load model weights');
 
         // DEBUG: Log all response headers
@@ -37,78 +52,48 @@ export function useQwenModel() {
         console.log('Content-Length:', weightsTotal, 'Has valid length:', hasContentLength);
 
         const weightsReader = weightsResponse.body.getReader();
-        const weightsChunks = [];
+        const loader = new ModelLoader();
         let weightsLoaded = 0;
-        const startTime = Date.now();
-        const EXPECTED_SIZE = 640 * 1024 * 1024; // ~640MB estimate
+        const EXPECTED_SIZE = 326 * 1024 * 1024; // ~326MB (all-Q4_K)
 
+        // Stream each chunk straight into the wasm loader, which quantizes tensors
+        // in file order and frees consumed bytes. The whole file is never held in
+        // JS or wasm at once, roughly halving peak memory vs the all-at-once load.
         while (true) {
           const { done, value } = await weightsReader.read();
           if (done) break;
 
-          weightsChunks.push(value);
+          loader.push(value);
           weightsLoaded += value.length;
 
-          // Progress updates
           if (hasContentLength && weightsTotal > 1) {
-            // Real progress based on actual content-length
-            setLoadProgress(15 + (weightsLoaded / weightsTotal) * 76);
+            setLoadProgress(15 + (weightsLoaded / weightsTotal) * 80);
           } else {
-            // Fallback: estimate based on bytes loaded (assume 640MB total)
-            const estimatedProgress = Math.min(91, 15 + (weightsLoaded / EXPECTED_SIZE) * 76);
-            setLoadProgress(estimatedProgress);
+            setLoadProgress(Math.min(95, 15 + (weightsLoaded / EXPECTED_SIZE) * 80));
           }
 
-          // Log progress every 50MB
           if (weightsLoaded % (50 * 1024 * 1024) < value.length) {
-            console.log(`Downloaded: ${(weightsLoaded / (1024 * 1024)).toFixed(1)}MB`);
+            console.log(`Streamed: ${(weightsLoaded / (1024 * 1024)).toFixed(1)}MB`);
           }
-
-          // Yield to event loop every 10MB to keep UI responsive
+          // Yield to the event loop every 10MB to keep the UI responsive.
           if (weightsLoaded % (10 * 1024 * 1024) < value.length) {
             await new Promise(resolve => setTimeout(resolve, 0));
           }
         }
 
-        console.log(`Total downloaded: ${(weightsLoaded / (1024 * 1024)).toFixed(1)}MB`);
-        setLoadProgress(92);
-        await new Promise(resolve => setTimeout(resolve, 100));
-
-        // More efficient array combination
-        console.log('Combining chunks into single array...');
-        const weights = new Uint8Array(weightsLoaded);
-        let offset = 0;
-        for (const chunk of weightsChunks) {
-          weights.set(chunk, offset);
-          offset += chunk.length;
-
-          // Yield every 50MB during combining
-          if (offset % (50 * 1024 * 1024) < chunk.length) {
-            await new Promise(resolve => setTimeout(resolve, 0));
-          }
-        }
-        weightsChunks.length = 0; // Free memory
-        console.log('Array combined');
-
+        console.log(`Total streamed: ${(weightsLoaded / (1024 * 1024)).toFixed(1)}MB`);
         if (cancelled) return;
-        setLoadProgress(95);
-        await new Promise(resolve => setTimeout(resolve, 50));
+        setLoadProgress(96);
 
-        // Fetch tokenizer (small, no progress needed)
+        // Fetch tokenizer (small) and finalize the model from the streamed tensors.
         const tokenizerResponse = await fetch('/assets/wasm/tokenizer.json');
         if (!tokenizerResponse.ok) throw new Error('Failed to load tokenizer');
-        const tokenizerData = await tokenizerResponse.arrayBuffer();
-        const tokenizer = new Uint8Array(tokenizerData);
+        const tokenizer = new Uint8Array(await tokenizerResponse.arrayBuffer());
 
         if (cancelled) return;
         setLoadProgress(98);
 
-        // Create model instance - pass empty config
-        const modelInstance = new Model(
-          weights,
-          tokenizer,
-          new Uint8Array(0) // Empty config
-        );
+        const modelInstance = loader.finish(tokenizer);
 
         if (cancelled) {
           modelInstance.reset();

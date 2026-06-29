@@ -64,9 +64,9 @@ impl CandleModel for Qwen3Model {
     fn metadata(&self) -> ModelMetadata {
         ModelMetadata {
             name: "Qwen3".to_string(),
-            version: "0.5B".to_string(),
+            version: "0.6B".to_string(),
             architecture: "Qwen3 (Quantized GGUF)".to_string(),
-            parameters: 500_000_000,
+            parameters: 600_000_000,
             context_length: Some(8192),
         }
     }

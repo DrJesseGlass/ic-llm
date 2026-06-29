@@ -5,7 +5,18 @@ members = [
 resolver = "2"
 
 [patch.crates-io]
-getrandom = { git = "https://github.com/DrJesseGlass/getrandom", tag = "v0.3.0-determinism.3" }
+getrandom = { git = "https://github.com/DrJesseGlass/getrandom", tag = "determinism-0.3.0.3" }
+
+# Redirect every huggingface/candle dep (this crate's and ic-dev-kit-rs's) to the
+# fork branch carrying the lazy quantized embedding and the wasm32 serial matmul
+# path. Patching unifies the source so a single candle-core is built; without it
+# the two consumers resolve to different candle revisions and the gguf Content
+# type no longer matches from_gguf. The relaxed-simd kernel on this branch is
+# cfg-gated on +relaxed-simd, which the IC build never sets, so it is excluded.
+[patch."https://github.com/huggingface/candle"]
+candle-core = { git = "https://github.com/DrJesseGlass/candle", branch = "wasm-browser-perf" }
+candle-nn = { git = "https://github.com/DrJesseGlass/candle", branch = "wasm-browser-perf" }
+candle-transformers = { git = "https://github.com/DrJesseGlass/candle", branch = "wasm-browser-perf" }
 
 [profile.release]
 opt-level = "z"

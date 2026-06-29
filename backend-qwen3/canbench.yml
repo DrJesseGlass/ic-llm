@@ -3,4 +3,6 @@ build_cmd: cargo build --release --target wasm32-unknown-unknown -p qwen3_backen
 wasm_path: ./target/wasm32-unknown-unknown/release/qwen3_backend.wasm
 
 stable_memory:
-  file: /home/jesse/.cache/huggingface/hub/models--unsloth--Qwen3-0.6B-GGUF/blobs/e150ed544dfe6016930c026a93913a5e3184181ebfe6ab2223ae01dd0491784c
+  # Raw all-Q4_K GGUF (341,455,328 bytes) loaded at offset 0; must match MODEL_SIZE
+  # in canbench_benchmarks.rs. Content-addressed blob path on the canbench host.
+  file: /home/jesse/.cache/huggingface/hub/models--DrJesseGlass--Qwen3-0.6B-Q4_K/blobs/b1da0fd70967fa812bce682c5385c8f61f63389148f877a927a56b0a56c42fbb

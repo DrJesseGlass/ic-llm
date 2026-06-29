@@ -53,6 +53,7 @@ cd src/frontend && npm install && cd ../..
 
 ### 3. Download Model Files
 ```bash
+mkdir -p src/frontend/public/assets/wasm
 cd src/frontend/public/assets/wasm
 
 # Download model weights (~326MB, all-Q4_K); filename must match the hook
@@ -80,6 +81,7 @@ Copy the **entire** pkg into `public/assets/wasm/`. `snippets/` is the
 wasm-bindgen-rayon worker glue; omitting it 404s the thread pool at runtime:
 ```bash
 DEST=<path-to-project>/src/frontend/public/assets/wasm
+mkdir -p "$DEST"
 cp pkg/candle_wasm_example_quant_qwen3_bg.wasm "$DEST"/
 cp pkg/candle_wasm_example_quant_qwen3.js      "$DEST"/
 cp -R pkg/snippets                             "$DEST"/

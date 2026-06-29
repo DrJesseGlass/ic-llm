@@ -7,7 +7,7 @@ use crate::qwen3::Qwen3Model;
 use ic_dev_kit_rs::candle::CandleModel;
 use ic_dev_kit_rs::text_generation::{AutoregressiveModel, GenerationConfig, TokenizerHandle};
 
-const MODEL_SIZE: usize = 639_447_744;
+const MODEL_SIZE: usize = 341_455_328; // Qwen3-0.6B-allq4k-f16src.gguf
 const TOKENIZER_BYTES: &[u8] = include_bytes!("/home/jesse/.cache/huggingface/hub/models--Qwen--Qwen3-0.6B/blobs/aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4");
 
 thread_local! {

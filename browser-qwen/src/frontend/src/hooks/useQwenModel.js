@@ -4,6 +4,9 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 // and the rayon worker resolves its snippets there. @vite-ignore prevents bundling.
 const WASM_MODULE_URL = '/assets/wasm/candle_wasm_example_quant_qwen3.js';
 
+// Cap the rayon pool; 4 balances decode throughput against per-thread wasm memory.
+const MAX_WORKER_THREADS = 4;
+
 export function useQwenModel() {
   const [model, setModel] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -18,12 +21,18 @@ export function useQwenModel() {
       try {
         setLoadProgress(5);
 
+        // Start both downloads before wasm init so connection setup and transfer
+        // overlap with instantiation and the thread-pool spawn; the bytes are only
+        // consumed once init completes.
+        const weightsPromise = fetch('/assets/wasm/Qwen3-0.6B-allq4k-f16src.gguf');
+        const tokenizerPromise = fetch('/assets/wasm/tokenizer.json');
+
         // Init wasm, then the rayon pool; single-threaded if not cross-origin isolated.
         const { default: init, ModelLoader, initThreadPool } =
           await import(/* @vite-ignore */ WASM_MODULE_URL);
         await init();
         if (globalThis.crossOriginIsolated) {
-          const threads = Math.max(1, Math.min(4, navigator.hardwareConcurrency || 4));
+          const threads = Math.max(1, Math.min(MAX_WORKER_THREADS, navigator.hardwareConcurrency || MAX_WORKER_THREADS));
           await initThreadPool(threads);
         } else {
           console.warn('Not cross-origin isolated; running single-threaded (check COOP/COEP headers).');
@@ -33,7 +42,7 @@ export function useQwenModel() {
         setLoadProgress(15);
 
         // Fetch weights with fallback progress (chunked transfer)
-        const weightsResponse = await fetch('/assets/wasm/Qwen3-0.6B-allq4k-f16src.gguf');
+        const weightsResponse = await weightsPromise;
         if (!weightsResponse.ok) throw new Error('Failed to load model weights');
 
         // DEBUG: Log all response headers
@@ -62,11 +71,9 @@ export function useQwenModel() {
           loader.push(value);
           weightsLoaded += value.length;
 
-          if (hasContentLength && weightsTotal > 1) {
-            setLoadProgress(15 + (weightsLoaded / weightsTotal) * 80);
-          } else {
-            setLoadProgress(Math.min(95, 15 + (weightsLoaded / EXPECTED_SIZE) * 80));
-          }
+          const total = hasContentLength ? weightsTotal : EXPECTED_SIZE;
+          const pct = 15 + (weightsLoaded / total) * 80;
+          setLoadProgress(hasContentLength ? pct : Math.min(95, pct));
 
           if (weightsLoaded % (50 * 1024 * 1024) < value.length) {
             console.log(`Streamed: ${(weightsLoaded / (1024 * 1024)).toFixed(1)}MB`);
@@ -81,8 +88,8 @@ export function useQwenModel() {
         if (cancelled) return;
         setLoadProgress(96);
 
-        // Fetch tokenizer (small) and finalize the model from the streamed tensors.
-        const tokenizerResponse = await fetch('/assets/wasm/tokenizer.json');
+        // Tokenizer downloaded in parallel with the weights stream; finalize the model.
+        const tokenizerResponse = await tokenizerPromise;
         if (!tokenizerResponse.ok) throw new Error('Failed to load tokenizer');
         const tokenizer = new Uint8Array(await tokenizerResponse.arrayBuffer());
 

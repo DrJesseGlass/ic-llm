@@ -25,7 +25,7 @@ fn ensure_model_loaded() {
         }
 
         let mut model_bytes = vec![0u8; MODEL_SIZE];
-        ic_cdk::api::stable::stable_read(0, &mut model_bytes);
+        ic_cdk::stable::stable_read(0, &mut model_bytes);
 
         let model = Qwen3Model::load(model_bytes, Some(TOKENIZER_BYTES.to_vec()))
             .expect("Failed to load model");
@@ -45,7 +45,7 @@ fn ensure_model_loaded() {
 fn bench_model_load() -> BenchResult {
     bench_fn(|| {
         let mut model_bytes = vec![0u8; MODEL_SIZE];
-        ic_cdk::api::stable::stable_read(0, &mut model_bytes);
+        ic_cdk::stable::stable_read(0, &mut model_bytes);
 
         let _model = Qwen3Model::load(model_bytes, Some(TOKENIZER_BYTES.to_vec()))
             .expect("Failed to load model");
@@ -344,4 +344,78 @@ fn bench_generate_5_tokens() -> BenchResult {
             })
         })
     })
+}
+
+// ---------------------------------------------------------------
+//  Decode cost vs context depth
+//
+//  Isolates the O(context) attention term: a single decoded token
+//  measured at a KV cache primed to ~N tokens. The priming runs
+//  OUTSIDE bench_fn, so only the one forward pass at depth N is
+//  counted. The delta across N is the per-context-token cost the
+//  short-prompt generate_* benches cannot see.
+//
+//  NOTE: priming is ~5B instructions per prompt token. Capped at 128:
+//  with the ~40B per-call ceiling you cannot realistically prefill
+//  even this far on-chain, so deeper contexts are academic.
+// ---------------------------------------------------------------
+
+// "The quick brown fox jumps over the lazy dog. " is ~10 tokens.
+fn context_prompt(approx_tokens: usize) -> String {
+    "The quick brown fox jumps over the lazy dog. ".repeat((approx_tokens / 10).max(1))
+}
+
+fn decode_at_context(approx_tokens: usize) -> BenchResult {
+    ensure_model_loaded();
+
+    // Setup (NOT measured): prime the KV cache to ~approx_tokens of context.
+    MODEL.with(|m| {
+        let mut model = m.borrow_mut();
+        let model = model.as_mut().unwrap();
+        TOKENIZER.with(|t| {
+            let tokenizer = t.borrow();
+            let tokenizer = tokenizer.as_ref().unwrap();
+
+            let config = GenerationConfig {
+                max_tokens: 64,
+                temperature: 0.7,
+                ..Default::default()
+            };
+
+            model.reset();
+            let _ = model.init_generation(
+                context_prompt(approx_tokens),
+                tokenizer.as_ref(),
+                &config,
+            );
+        });
+    });
+
+    // Measured: one decode at context depth ~approx_tokens.
+    bench_fn(|| {
+        MODEL.with(|m| {
+            let mut model = m.borrow_mut();
+            let model = model.as_mut().unwrap();
+            TOKENIZER.with(|t| {
+                let tokenizer = t.borrow();
+                let tokenizer = tokenizer.as_ref().unwrap();
+                let _ = model.generate_next_token(tokenizer.as_ref());
+            });
+        });
+    })
+}
+
+#[bench(raw)]
+fn bench_decode_at_context_16() -> BenchResult {
+    decode_at_context(16)
+}
+
+#[bench(raw)]
+fn bench_decode_at_context_64() -> BenchResult {
+    decode_at_context(64)
+}
+
+#[bench(raw)]
+fn bench_decode_at_context_128() -> BenchResult {
+    decode_at_context(128)
 }

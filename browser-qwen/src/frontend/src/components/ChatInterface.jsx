@@ -254,7 +254,7 @@ export function ChatInterface() {
         </div>
         <p>{loadProgress.toFixed(0)}% complete</p>
         <p className="loading-hint">
-          First load may take a minute (downloading ~645MB)
+          First load may take a minute (downloading ~326MB)
         </p>
       </div>
     );
@@ -275,7 +275,10 @@ export function ChatInterface() {
   return (
     <div className="chat-container">
       <header className="chat-header">
-        <h1>🤖 Qwen3 Chat</h1>
+        <h1>
+          <span className="brand-mark" aria-hidden="true">Q</span>
+          <span className="brand-name">Qwen3 <span className="brand-accent">Chat</span></span>
+        </h1>
         <p>Running locally with WebAssembly + SIMD</p>
       </header>
 
@@ -368,7 +371,7 @@ export function ChatInterface() {
 
       <footer className="chat-footer">
         <p>
-          Model: Qwen3-0.6B-Q8 • Framework: Candle • Built with Rust + WASM
+          Model: Qwen3-0.6B Q4_K • Framework: Candle • Built with Rust + WASM
         </p>
       </footer>
     </div>

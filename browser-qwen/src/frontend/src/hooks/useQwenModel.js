@@ -4,8 +4,9 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 // and the rayon worker resolves its snippets there. @vite-ignore prevents bundling.
 const WASM_MODULE_URL = '/assets/wasm/candle_wasm_example_quant_qwen3.js';
 
-// Cap the rayon pool; 4 balances decode throughput against per-thread wasm memory.
-const MAX_WORKER_THREADS = 4;
+// Use all logical cores by default; cap only to avoid pathological oversubscription
+// on very-high-core hosts (the model is small, so returns flatten past ~8 threads).
+const MAX_WORKER_THREADS = 16;
 
 export function useQwenModel() {
   const [model, setModel] = useState(null);
@@ -27,7 +28,8 @@ export function useQwenModel() {
         const weightsPromise = fetch('/assets/wasm/Qwen3-0.6B-allq4k-f16src.gguf');
         const tokenizerPromise = fetch('/assets/wasm/tokenizer.json');
 
-        // Init wasm, then the rayon pool; single-threaded if not cross-origin isolated.
+        // Init the wasm + rayon pool (all cores). Threads need cross-origin isolation
+        // (SharedArrayBuffer); without it we fall back to single-threaded.
         const { default: init, ModelLoader, initThreadPool } =
           await import(/* @vite-ignore */ WASM_MODULE_URL);
         await init();
@@ -41,20 +43,12 @@ export function useQwenModel() {
         if (cancelled) return;
         setLoadProgress(15);
 
-        // Fetch weights with fallback progress (chunked transfer)
+        // Fetch weights with fallback progress (chunked transfer).
         const weightsResponse = await weightsPromise;
         if (!weightsResponse.ok) throw new Error('Failed to load model weights');
 
-        // DEBUG: Log all response headers
-        console.log('Response headers:');
-        for (let [key, value] of weightsResponse.headers.entries()) {
-          console.log(`  ${key}: ${value}`);
-        }
-
         const weightsTotal = parseInt(weightsResponse.headers.get('content-length'));
         const hasContentLength = weightsTotal && weightsTotal > 1;
-
-        console.log('Content-Length:', weightsTotal, 'Has valid length:', hasContentLength);
 
         const weightsReader = weightsResponse.body.getReader();
         const loader = new ModelLoader();
@@ -74,17 +68,12 @@ export function useQwenModel() {
           const total = hasContentLength ? weightsTotal : EXPECTED_SIZE;
           const pct = 15 + (weightsLoaded / total) * 80;
           setLoadProgress(hasContentLength ? pct : Math.min(95, pct));
-
-          if (weightsLoaded % (50 * 1024 * 1024) < value.length) {
-            console.log(`Streamed: ${(weightsLoaded / (1024 * 1024)).toFixed(1)}MB`);
-          }
           // Yield to the event loop every 10MB to keep the UI responsive.
           if (weightsLoaded % (10 * 1024 * 1024) < value.length) {
             await new Promise(resolve => setTimeout(resolve, 0));
           }
         }
 
-        console.log(`Total streamed: ${(weightsLoaded / (1024 * 1024)).toFixed(1)}MB`);
         if (cancelled) return;
         setLoadProgress(96);
 

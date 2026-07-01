@@ -1,0 +1,107 @@
+benches:
+  bench_decode_10_tokens:
+    total:
+      calls: 1
+      instructions: 526889
+      heap_increase: 0
+      stable_memory_increase: 0
+    scopes: {}
+  bench_decode_at_context_128:
+    total:
+      calls: 1
+      instructions: 7153248390
+      heap_increase: 0
+      stable_memory_increase: 0
+    scopes: {}
+  bench_decode_at_context_16:
+    total:
+      calls: 1
+      instructions: 6886051172
+      heap_increase: 0
+      stable_memory_increase: 0
+    scopes: {}
+  bench_decode_at_context_64:
+    total:
+      calls: 1
+      instructions: 7007244046
+      heap_increase: 0
+      stable_memory_increase: 0
+    scopes: {}
+  bench_generate_1_token:
+    total:
+      calls: 1
+      instructions: 30954966882
+      heap_increase: 0
+      stable_memory_increase: 0
+    scopes: {}
+  bench_generate_3_tokens:
+    total:
+      calls: 1
+      instructions: 44704829596
+      heap_increase: 0
+      stable_memory_increase: 0
+    scopes: {}
+  bench_generate_5_tokens:
+    total:
+      calls: 1
+      instructions: 58465339713
+      heap_increase: 0
+      stable_memory_increase: 0
+    scopes: {}
+  bench_model_load:
+    total:
+      calls: 1
+      instructions: 9572915154
+      heap_increase: 13199
+      stable_memory_increase: 0
+    scopes: {}
+  bench_prefill_long_200_tokens:
+    total:
+      calls: 1
+      instructions: 1029216732211
+      heap_increase: 0
+      stable_memory_increase: 0
+    scopes: {}
+  bench_prefill_medium_50_tokens:
+    total:
+      calls: 1
+      instructions: 250877423640
+      heap_increase: 0
+      stable_memory_increase: 0
+    scopes: {}
+  bench_prefill_short_4_tokens:
+    total:
+      calls: 1
+      instructions: 11710539750
+      heap_increase: 0
+      stable_memory_increase: 0
+    scopes: {}
+  bench_single_token:
+    total:
+      calls: 1
+      instructions: 30954966882
+      heap_increase: 0
+      stable_memory_increase: 0
+    scopes: {}
+  bench_tokenize_long:
+    total:
+      calls: 1
+      instructions: 101898589
+      heap_increase: 0
+      stable_memory_increase: 0
+    scopes: {}
+  bench_tokenize_medium:
+    total:
+      calls: 1
+      instructions: 51994044
+      heap_increase: 0
+      stable_memory_increase: 0
+    scopes: {}
+  bench_tokenize_short:
+    total:
+      calls: 1
+      instructions: 46496452
+      heap_increase: 0
+      stable_memory_increase: 0
+    scopes: {}
+version: 0.6.0

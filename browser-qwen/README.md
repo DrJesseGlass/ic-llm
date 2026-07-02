@@ -31,8 +31,8 @@ Run a fully functional 600M parameter language model entirely in your browser, d
 
 ## Prerequisites
 
-- Node.js ≥ 16.0.0
-- npm ≥ 7.0.0
+- Node.js >= 16.0.0
+- npm >= 7.0.0
 - dfx (IC SDK) - [Install here](https://internetcomputer.org/docs/current/developer-docs/getting-started/install/)
 - Rust + wasm-pack - [Install here](https://rustwasm.github.io/wasm-pack/installer/)
 - ~700MB disk space for model files
@@ -116,9 +116,9 @@ dfx deploy --network ic
 
 ### Thinking Mode
 
-Click the "▶ Reasoning Process" dropdown to see the model's internal reasoning:
+Click the "> Reasoning Process" dropdown to see the model's internal reasoning:
 ```
-▼ Reasoning Process
+v Reasoning Process
 Okay, the user is asking about X. I need to consider Y and Z...
 
 Response:
@@ -135,23 +135,23 @@ The answer is based on...
 ## Project Structure
 ```
 qwen3-ic-browser/
-├── dfx.json                    # IC canister configuration
-├── src/
-│   └── frontend/
-│       ├── public/
-│       │   ├── assets/wasm/    # Model files & WASM artifacts
-│       │   └── .ic-assets.json5 # Asset canister config
-│       ├── src/
-│       │   ├── components/
-│       │   │   ├── ChatInterface.jsx
-│       │   │   └── ChatInterface.css
-│       │   ├── hooks/
-│       │   │   └── useQwenModel.js  # Model loading & inference
-│       │   ├── main.jsx
-│       │   └── index.scss
-│       ├── vite.config.js
-│       └── package.json
-└── README.md
+|-- dfx.json                    # IC canister configuration
+|-- src/
+|   `-- frontend/
+|       |-- public/
+|       |   |-- assets/wasm/    # Model files & WASM artifacts
+|       |   `-- .ic-assets.json5 # Asset canister config
+|       |-- src/
+|       |   |-- components/
+|       |   |   |-- ChatInterface.jsx
+|       |   |   `-- ChatInterface.css
+|       |   |-- hooks/
+|       |   |   `-- useQwenModel.js  # Model loading & inference
+|       |   |-- main.jsx
+|       |   `-- index.scss
+|       |-- vite.config.js
+|       `-- package.json
+`-- README.md
 ```
 
 ## Architecture
@@ -166,15 +166,15 @@ qwen3-ic-browser/
 
 ### Inference Flow
 ```
-User Input → Chat Template → Model.init_with_prompt() → 
-Token Generation Loop → Token Filtering → UI Update
+User Input -> Chat Template -> Model.init_with_prompt() -> 
+Token Generation Loop -> Token Filtering -> UI Update
 ```
 
 ### Thinking Mode Architecture
 ```
-Prompt with <think> tag → Model generates:
-  <think>reasoning content</think>response content →
-Parse and split → Display separately
+Prompt with <think> tag -> Model generates:
+  <think>reasoning content</think>response content ->
+Parse and split -> Display separately
 ```
 
 ## Performance

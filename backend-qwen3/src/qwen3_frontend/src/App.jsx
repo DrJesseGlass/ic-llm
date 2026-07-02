@@ -42,7 +42,7 @@ function App() {
         </button>
         {modelLoaded !== null && (
           <span className={`status ${modelLoaded ? 'online' : 'offline'}`}>
-            {modelLoaded ? '● Model Ready' : '○ Model Not Loaded'}
+            {modelLoaded ? '[+] Model Ready' : '[ ] Model Not Loaded'}
           </span>
         )}
       </div>

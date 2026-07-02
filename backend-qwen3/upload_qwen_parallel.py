@@ -100,10 +100,10 @@ def upload_file_in_chunks(file_path: Path, method_name: str) -> bool:
         success, output = run_dfx_command(cmd)
 
         if not success:
-            print("❌ Failed")
+            print("[FAIL] Failed")
             return False
 
-        print("✅")
+        print("[OK]")
 
         # Show progress from canister
         if output.strip():
@@ -123,28 +123,28 @@ def main():
     # Verify files exist
     for path in [WEIGHTS_PATH, TOKENIZER_PATH, CONFIG_PATH]:
         if not path.exists():
-            print(f"❌ Error: {path.name} not found at {path}", file=sys.stderr)
+            print(f"[FAIL] Error: {path.name} not found at {path}", file=sys.stderr)
             sys.exit(1)
-        print(f"✅ Found: {path.name}")
+        print(f"[OK] Found: {path.name}")
 
-    print(f"\n📦 Upload Configuration:")
+    print(f"\nUpload Configuration:")
     print(f"  Canister: {CANISTER_NAME}")
     print(f"  Chunk size: {CHUNK_SIZE / 1_048_576:.2f} MB")
     print(f"  Model: {GGUF_FILE}")
     print(f"  Total size: {WEIGHTS_PATH.stat().st_size / 1_048_576:.2f} MB")
 
     # Check if canister is deployed
-    print("\n🔍 Checking canister status...")
+    print("\nChecking canister status...")
     success, output = run_dfx_command(['dfx', 'canister', 'id', CANISTER_NAME])
     if not success:
-        print("❌ Canister not found. Deploy with: dfx deploy")
+        print("[FAIL] Canister not found. Deploy with: dfx deploy")
         sys.exit(1)
 
     canister_id = output.strip()
-    print(f"✅ Canister found: {canister_id}")
+    print(f"[OK] Canister found: {canister_id}")
 
     # Upload tokenizer (small file, single upload)
-    print("\n📤 Uploading tokenizer...")
+    print("\nUploading tokenizer...")
     with open(TOKENIZER_PATH, 'rb') as f:
         tokenizer_data = f.read()
     tokenizer_hex = tokenizer_data.hex()
@@ -155,12 +155,12 @@ def main():
     ])
 
     if not success:
-        print("❌ Failed to upload tokenizer")
+        print("[FAIL] Failed to upload tokenizer")
         sys.exit(1)
-    print("✅ Tokenizer uploaded")
+    print("[OK] Tokenizer uploaded")
 
     # Upload config (small file, single upload)
-    print("\n📤 Uploading config...")
+    print("\nUploading config...")
     with open(CONFIG_PATH, 'rb') as f:
         config_data = f.read()
     config_hex = config_data.hex()
@@ -171,13 +171,13 @@ def main():
     ])
 
     if not success:
-        print("❌ Failed to upload config")
+        print("[FAIL] Failed to upload config")
         sys.exit(1)
-    print("✅ Config uploaded")
+    print("[OK] Config uploaded")
 
     # Upload model weights in chunks
     if not upload_file_in_chunks(WEIGHTS_PATH, "upload_weights_chunk"):
-        print("\n❌ Failed to upload model weights")
+        print("\n[FAIL] Failed to upload model weights")
         sys.exit(1)
 
     print("All files uploaded successfully!")
@@ -189,14 +189,14 @@ def main():
     ])
 
     if not success:
-        print("❌ Failed to initialize model")
+        print("[FAIL] Failed to initialize model")
         sys.exit(1)
 
-    print("✅ Model initialized!")
+    print("[OK] Model initialized!")
     print(output)
 
     # Get model info
-    print("\n📊 Model Info:")
+    print("\nModel Info:")
     success, output = run_dfx_command([
         'dfx', 'canister', 'call', CANISTER_NAME, 'get_model_info'
     ])
@@ -204,7 +204,7 @@ def main():
     if success:
         print(output)
 
-    print("\n🎉 Setup complete! You can now run inference.")
+    print("\nSetup complete! You can now run inference.")
     print(f"\nTest with:")
     print(f'  dfx canister call {CANISTER_NAME} init_with_prompt \'(record {{ prompt = "Hello"; config = null }})\'')
 

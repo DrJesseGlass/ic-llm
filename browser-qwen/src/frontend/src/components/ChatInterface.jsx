@@ -65,7 +65,7 @@ function Message({ message, isStreaming }) {
             className="thinking-toggle"
             onClick={() => setShowThinking(!showThinking)}
           >
-            <span>{showThinking ? '▼' : '▶'}</span> Reasoning
+            <span>{showThinking ? 'v' : '>'}</span> Reasoning
           </button>
           {showThinking && (
             <div className="thinking-content">{message.thinking}</div>
@@ -73,7 +73,7 @@ function Message({ message, isStreaming }) {
         </div>
       )}
       <div className="message-content">
-        {message.content || (isStreaming && <span className="streaming-cursor">▊</span>)}
+        {message.content || (isStreaming && <span className="streaming-cursor">|</span>)}
       </div>
       {isStreaming && <span className="streaming-indicator"></span>}
     </div>
@@ -371,7 +371,7 @@ export function ChatInterface() {
 
       <footer className="chat-footer">
         <p>
-          Model: Qwen3-0.6B Q4_K • Framework: Candle • Built with Rust + WASM
+          Model: Qwen3-0.6B Q4_K | Framework: Candle | Built with Rust + WASM
         </p>
       </footer>
     </div>
